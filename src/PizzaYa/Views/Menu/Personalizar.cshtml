@@ -1,0 +1,141 @@
+@model PersonalizarViewModel
+@{
+    ViewData["Title"] = $"Personalizar {Model.Pizza.Nombre}";
+    var s = Model.Seleccion;
+}
+
+<a asp-action="Index" class="text-decoration-none">&larr; Volver al menú</a>
+
+<div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mt-2 mb-4">
+    <div>
+        <h1 class="fw-bold mb-1">@Model.Pizza.Nombre</h1>
+        <p class="text-muted mb-0">@Model.Pizza.Descripcion</p>
+    </div>
+    <span class="fs-4 fw-bold">Desde @Formato.Pesos(Model.Pizza.PrecioBase)</span>
+</div>
+
+<form asp-action="Personalizar" asp-route-id="@Model.Pizza.Id" method="post" id="form-personalizar" novalidate>
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+    @* Tamaño (obligatorio) *@
+    <fieldset class="card mb-3">
+        <div class="card-body">
+            <legend class="h5">1. Tamaño <span class="text-danger">*</span></legend>
+            <div class="d-flex flex-wrap gap-2">
+                @foreach (var t in Model.Tamanos)
+                {
+                    <input type="radio" class="btn-check opcion-check" name="Seleccion.TamanoId" id="tamano-@t.Id"
+                           value="@t.Id" checked="@(s.TamanoId == t.Id)" />
+                    <label class="btn btn-outline-danger" for="tamano-@t.Id">@t.Nombre</label>
+                }
+            </div>
+            <span asp-validation-for="Seleccion.TamanoId" class="text-danger small d-block mt-2"></span>
+        </div>
+    </fieldset>
+
+    @* Borde *@
+    <fieldset class="card mb-3">
+        <div class="card-body">
+            <legend class="h5">2. Borde</legend>
+            <div class="d-flex flex-wrap gap-2">
+                @foreach (var b in Model.Bordes)
+                {
+                    <input type="radio" class="btn-check opcion-check" name="Seleccion.BordeId" id="borde-@b.Id"
+                           value="@b.Id" checked="@(s.BordeId == b.Id)" />
+                    <label class="btn btn-outline-secondary" for="borde-@b.Id">
+                        @b.Nombre
+                        @if (b.Precio > 0) { <small>(+@Formato.Pesos(b.Precio))</small> }
+                    </label>
+                }
+            </div>
+            <span asp-validation-for="Seleccion.BordeId" class="text-danger small d-block mt-2"></span>
+        </div>
+    </fieldset>
+
+    @* Quitar ingredientes base *@
+    <fieldset class="card mb-3">
+        <div class="card-body">
+            <legend class="h5">3. ¿Quieres quitar algo?</legend>
+            <p class="text-muted small">Marca los ingredientes que <strong>no</strong> quieres en tu pizza.</p>
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3">
+                @foreach (var i in Model.Pizza.IngredientesBase)
+                {
+                    <div class="col form-check ps-5">
+                        <input class="form-check-input quitar-check" type="checkbox" name="Seleccion.QuitadosIds"
+                               id="quitar-@i.Id" value="@i.Id" checked="@s.QuitadosIds.Contains(i.Id)" />
+                        <label class="form-check-label" for="quitar-@i.Id">Sin @i.Nombre.ToLower()</label>
+                    </div>
+                }
+            </div>
+            <span asp-validation-for="Seleccion.QuitadosIds" class="text-danger small d-block mt-2"></span>
+        </div>
+    </fieldset>
+
+    @* Extras (máximo 6) *@
+    <fieldset class="card mb-4">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+                <legend class="h5 mb-0 w-auto">4. Ingredientes extra</legend>
+                <span class="badge text-bg-secondary" id="contador-extras">
+                    <span id="extras-usados">@s.ExtrasIds.Count</span> / @PizzaPersonalizada.MaximoExtras
+                </span>
+            </div>
+            <p class="text-muted small mt-2">Puedes agregar hasta @PizzaPersonalizada.MaximoExtras extras.</p>
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3">
+                @foreach (var i in Model.Extras)
+                {
+                    <div class="col form-check ps-5">
+                        <input class="form-check-input extra-check" type="checkbox" name="Seleccion.ExtrasIds"
+                               id="extra-@i.Id" value="@i.Id" checked="@s.ExtrasIds.Contains(i.Id)" />
+                        <label class="form-check-label" for="extra-@i.Id">
+                            @i.Nombre <small class="text-muted">+@Formato.Pesos(i.PrecioExtra)</small>
+                        </label>
+                    </div>
+                }
+            </div>
+            <span asp-validation-for="Seleccion.ExtrasIds" class="text-danger small d-block mt-2"></span>
+        </div>
+    </fieldset>
+
+    <div class="d-flex justify-content-end align-items-center gap-3">
+        <small class="text-muted" id="aviso-tamano">Escoge un tamaño para continuar.</small>
+        <button type="submit" class="btn btn-danger btn-lg" id="btn-continuar">Continuar</button>
+    </div>
+</form>
+
+@section Scripts {
+    <script>
+        (function () {
+            const maximo = @PizzaPersonalizada.MaximoExtras;
+            const form = document.getElementById('form-personalizar');
+            const boton = document.getElementById('btn-continuar');
+            const aviso = document.getElementById('aviso-tamano');
+            const extras = form.querySelectorAll('.extra-check');
+            const usados = document.getElementById('extras-usados');
+            const contador = document.getElementById('contador-extras');
+
+            // Sin tamaño no se puede continuar
+            function revisarTamano() {
+                const hayTamano = form.querySelector('input[name="Seleccion.TamanoId"]:checked') !== null;
+                boton.disabled = !hayTamano;
+                aviso.hidden = hayTamano;
+            }
+
+            // Máximo de extras: al llegar al tope se bloquean los no marcados
+            function revisarExtras() {
+                const marcados = [...extras].filter(c => c.checked).length;
+                usados.textContent = marcados;
+                contador.classList.toggle('text-bg-danger', marcados >= maximo);
+                contador.classList.toggle('text-bg-secondary', marcados < maximo);
+                extras.forEach(c => c.disabled = !c.checked && marcados >= maximo);
+            }
+
+            form.addEventListener('change', function () {
+                revisarTamano();
+                revisarExtras();
+            });
+            revisarTamano();
+            revisarExtras();
+        })();
+    </script>
+}
