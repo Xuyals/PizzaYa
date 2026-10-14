@@ -1,0 +1,119 @@
+@model CarritoViewModel
+@using PizzaYa.Models
+@{
+    ViewData["Title"] = "Mi carrito";
+    var co = new System.Globalization.CultureInfo("es-CO");
+}
+
+<h1 class="h3 fw-bold mb-4">🛒 Mi carrito</h1>
+
+@if (ViewBag.Exito is string exito)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @exito
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["Error"] is string err)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @err
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (Model.Carrito.EstaVacio)
+{
+    <div class="text-center py-5">
+        <p class="fs-4 text-muted">Tu carrito está vacío.</p>
+        <a class="btn btn-danger btn-lg mt-2" asp-controller="Menu" asp-action="Index">
+            🍕 Ver el menú
+        </a>
+    </div>
+}
+else
+{
+    <div class="table-responsive mb-3">
+        <table class="table table-hover align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>Pizza</th>
+                    <th>Tamaño / Borde</th>
+                    <th>Extras</th>
+                    <th class="text-end">Precio unit.</th>
+                    <th class="text-center" style="width:130px">Cantidad</th>
+                    <th class="text-end">Subtotal</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Carrito.Items)
+                {
+                    <tr>
+                        <td class="fw-semibold">@item.NombrePizza</td>
+                        <td>
+                            <span class="badge bg-secondary me-1">@item.NombreTamano</span>
+                            <span class="badge bg-light text-dark border">@item.NombreBorde</span>
+                        </td>
+                        <td>
+                            @if (item.NombresExtras.Any())
+                            {
+                                @string.Join(", ", item.NombresExtras)
+                            }
+                            else
+                            {
+                                <span class="text-muted">Sin extras</span>
+                            }
+                        </td>
+                        <td class="text-end">@item.PrecioUnitario.ToString("C0", co)</td>
+
+                        @* Cambiar cantidad *@
+                        <td class="text-center">
+                            <form asp-controller="Carrito" asp-action="CambiarCantidad" method="post"
+                                  class="d-flex align-items-center gap-1 justify-content-center">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="itemId" value="@item.Id" />
+                                <button type="submit" name="cantidad" value="@(item.Cantidad - 1)"
+                                        class="btn btn-sm btn-outline-secondary px-2">−</button>
+                                <span class="fw-bold" style="min-width:1.5rem">@item.Cantidad</span>
+                                <button type="submit" name="cantidad" value="@(item.Cantidad + 1)"
+                                        class="btn btn-sm btn-outline-secondary px-2">+</button>
+                            </form>
+                        </td>
+
+                        <td class="text-end fw-semibold">@item.Subtotal.ToString("C0", co)</td>
+
+                        @* Eliminar *@
+                        <td>
+                            <form asp-controller="Carrito" asp-action="Eliminar" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="itemId" value="@item.Id" />
+                                <button type="submit" class="btn btn-sm btn-outline-danger"
+                                        onclick="return confirm('¿Eliminar esta pizza del carrito?')">
+                                    🗑
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr class="table-light fw-bold">
+                    <td colspan="5" class="text-end">Subtotal</td>
+                    <td class="text-end">@Model.Carrito.Subtotal.ToString("C0", co)</td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <div class="d-flex justify-content-between flex-wrap gap-2">
+        <a class="btn btn-outline-secondary" asp-controller="Menu" asp-action="Index">
+            ← Seguir comprando
+        </a>
+        <a class="btn btn-danger btn-lg px-5" asp-controller="Carrito" asp-action="Confirmar">
+            Confirmar pedido →
+        </a>
+    </div>
+}

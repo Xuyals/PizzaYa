@@ -42,9 +42,11 @@
 
                 <div class="d-flex justify-content-between flex-wrap gap-2">
                     <a class="btn btn-outline-secondary" asp-action="Personalizar" asp-route-id="@Model.Pizza.Id">Editar</a>
-                    @* El Equipo 2 (HU3 - Carrito) conecta aquí el botón "Agregar"
-                       leyendo la sesión "PizzaPersonalizada". *@
-                    <a class="btn btn-danger" asp-action="Index">Seguir viendo el menú</a>
+                    @* Equipo 2 (HU2+HU3): el precio y "Agregar al carrito" están en /Precio/Resumen *@
+                    <a class="btn btn-success" asp-controller="Precio" asp-action="Resumen">
+                        Ver precio y agregar al carrito →
+                    </a>
+                    <a class="btn btn-outline-danger" asp-action="Index">Seguir viendo el menú</a>
                 </div>
             </div>
         </div>

@@ -33,6 +33,8 @@ else
     builder.Services.AddSingleton<IMenuRepository>(InMemoryMenuRepository.ConDatosDeEjemplo());
 }
 builder.Services.AddSingleton<PersonalizacionService>();
+builder.Services.AddSingleton<PrecioService>();
+builder.Services.AddSingleton<CarritoService>();
 
 var app = builder.Build();
 
