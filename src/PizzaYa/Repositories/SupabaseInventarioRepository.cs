@@ -19,10 +19,56 @@ public class SupabaseInventarioRepository : IInventarioRepository
         await using var conn = await _db.OpenConnectionAsync();
         return (await conn.QueryAsync<IngredienteInventario>(
             """
-            select id, nombre, unidad, cantidad, cantidad_minima
+            select id, nombre, unidad, cantidad, cantidad_minima, consumo_por_pizza
             from ingredientes
             order by nombre
             """)).ToList();
+    }
+
+    private class FilaInventario
+    {
+        public int Id { get; set; }
+        public string Nombre { get; set; } = "";
+        public string Unidad { get; set; } = "";
+        public decimal Cantidad { get; set; }
+    }
+
+    public async Task<ResultadoDescuento> DescontarAsync(IReadOnlyDictionary<int, decimal> consumo)
+    {
+        var pedido = consumo.Where(c => c.Value > 0).OrderBy(c => c.Key).ToList(); // en orden, para no bloquearse entre pedidos
+        if (pedido.Count == 0) return ResultadoDescuento.Ok();
+
+        await using var conn = await _db.OpenConnectionAsync();
+        await using var tx = await conn.BeginTransactionAsync();
+
+        // Se bloquean las filas mientras se revisa y se resta: dos pedidos a la vez no pueden gastar lo mismo
+        var filas = (await conn.QueryAsync<FilaInventario>(
+            "select id, nombre, unidad, cantidad from ingredientes where id = any(@ids) order by id for update",
+            new { ids = pedido.Select(c => c.Key).ToArray() }, tx)).ToDictionary(f => f.Id);
+
+        var faltantes = pedido
+            .Where(c => filas.TryGetValue(c.Key, out var f) && f.Cantidad < c.Value)
+            .Select(c => new FaltanteInventario(c.Key, filas[c.Key].Nombre, filas[c.Key].Unidad, filas[c.Key].Cantidad, c.Value))
+            .ToList();
+        if (faltantes.Count > 0)
+        {
+            await tx.RollbackAsync();
+            return new ResultadoDescuento(false, faltantes);
+        }
+
+        foreach (var (id, cantidad) in pedido.Where(c => filas.ContainsKey(c.Key)))
+            await conn.ExecuteAsync("update ingredientes set cantidad = cantidad - @cantidad where id = @id",
+                new { id, cantidad }, tx);
+
+        await tx.CommitAsync();
+        return ResultadoDescuento.Ok();
+    }
+
+    public async Task ReponerAsync(IReadOnlyDictionary<int, decimal> consumo)
+    {
+        await using var conn = await _db.OpenConnectionAsync();
+        foreach (var (id, cantidad) in consumo.Where(c => c.Value > 0).OrderBy(c => c.Key))
+            await conn.ExecuteAsync("update ingredientes set cantidad = cantidad + @cantidad where id = @id", new { id, cantidad });
     }
 
     public async Task<List<PedidoProveedor>> ObtenerPedidosAsync()

@@ -18,4 +18,14 @@ public interface IInventarioRepository
     /// Devuelve false si el pedido no existe o ya no está "Pendiente" (no suma dos veces).
     /// </summary>
     Task<bool> RecibirPedidoAsync(int pedidoId);
+
+    /// <summary>
+    /// HU9 – Resta del inventario lo que gasta un pedido (ingrediente → cantidad) en un solo paso: si algún
+    /// ingrediente no alcanza no se descuenta nada y se devuelven los faltantes, así la cantidad nunca queda
+    /// negativa. Los ingredientes que el inventario no controla se ignoran.
+    /// </summary>
+    Task<ResultadoDescuento> DescontarAsync(IReadOnlyDictionary<int, decimal> consumo);
+
+    /// <summary>HU9 – Devuelve al inventario lo descontado (si el pedido no se pudo guardar después de descontar).</summary>
+    Task ReponerAsync(IReadOnlyDictionary<int, decimal> consumo);
 }

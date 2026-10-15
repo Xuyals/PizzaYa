@@ -44,6 +44,41 @@ public class InMemoryInventarioRepository : IInventarioRepository
         }
     }
 
+    public Task<ResultadoDescuento> DescontarAsync(IReadOnlyDictionary<int, decimal> consumo)
+    {
+        lock (_candado)
+        {
+            var faltantes = new List<FaltanteInventario>();
+            foreach (var (id, necesario) in consumo.Where(c => c.Value > 0))
+            {
+                var ingrediente = _ingredientes.FirstOrDefault(i => i.Id == id);
+                if (ingrediente is not null && ingrediente.Cantidad < necesario)
+                    faltantes.Add(new FaltanteInventario(id, ingrediente.Nombre, ingrediente.Unidad, ingrediente.Cantidad, necesario));
+            }
+            if (faltantes.Count > 0) return Task.FromResult(new ResultadoDescuento(false, faltantes));
+
+            foreach (var (id, necesario) in consumo.Where(c => c.Value > 0))
+            {
+                var ingrediente = _ingredientes.FirstOrDefault(i => i.Id == id);
+                if (ingrediente is not null) ingrediente.Cantidad -= necesario;
+            }
+            return Task.FromResult(ResultadoDescuento.Ok());
+        }
+    }
+
+    public Task ReponerAsync(IReadOnlyDictionary<int, decimal> consumo)
+    {
+        lock (_candado)
+        {
+            foreach (var (id, cantidad) in consumo.Where(c => c.Value > 0))
+            {
+                var ingrediente = _ingredientes.FirstOrDefault(i => i.Id == id);
+                if (ingrediente is not null) ingrediente.Cantidad += cantidad;
+            }
+        }
+        return Task.CompletedTask;
+    }
+
     public Task<List<PedidoProveedor>> ObtenerPedidosAsync()
     {
         lock (_candado)
@@ -103,6 +138,7 @@ public class InMemoryInventarioRepository : IInventarioRepository
     private static IngredienteInventario Copiar(IngredienteInventario i) => new()
     {
         Id = i.Id, Nombre = i.Nombre, Unidad = i.Unidad, Cantidad = i.Cantidad, CantidadMinima = i.CantidadMinima,
+        ConsumoPorPizza = i.ConsumoPorPizza,
     };
 
     private static PedidoProveedor Copiar(PedidoProveedor p) => new()
