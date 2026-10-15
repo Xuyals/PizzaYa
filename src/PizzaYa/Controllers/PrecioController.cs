@@ -17,13 +17,16 @@ public class PrecioController : Controller
     private readonly PrecioService _precio;
     private readonly CarritoService _carrito;
     private readonly CuponService _cupones;
+    private readonly ConfiguracionService _configuracion;
 
-    public PrecioController(IMenuRepository menu, PrecioService precio, CarritoService carrito, CuponService cupones)
+    public PrecioController(IMenuRepository menu, PrecioService precio, CarritoService carrito, CuponService cupones,
+        ConfiguracionService configuracion)
     {
         _menu = menu;
         _precio = precio;
         _carrito = carrito;
         _cupones = cupones;
+        _configuracion = configuracion;
     }
 
     // GET: /Precio/Resumen?esDomicilio=false&cupon=
@@ -134,6 +137,8 @@ public class PrecioController : Controller
 
         // Los cupones salen de la base de datos (HU6): pueden vencer o ser de un solo cliente
         var cupones = await _cupones.ObtenerParaUsuarioAsync(User.UsuarioId());
-        return _precio.ArmarResumen(pizza, tamano, borde, extras, quitados, esDomicilio, cupon, cupones);
+        // El valor del domicilio lo configura el administrador (HU7)
+        var valorDomicilio = await _configuracion.ObtenerCostoDomicilioAsync();
+        return _precio.ArmarResumen(pizza, tamano, borde, extras, quitados, esDomicilio, cupon, cupones, valorDomicilio);
     }
 }

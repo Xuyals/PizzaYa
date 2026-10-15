@@ -1,0 +1,62 @@
+@model PizzaYa.Models.PizzaFormViewModel
+@{
+    ViewData["Title"] = Model.EsNueva ? "Nueva pizza" : "Editar pizza";
+    string Clase(string campo) => ViewData.ModelState[campo]?.Errors.Count > 0 ? "is-invalid" : "";
+    var co = new System.Globalization.CultureInfo("es-CO");
+}
+
+<h1 class="h3 fw-bold mb-3">@ViewData["Title"]</h1>
+
+<div class="row">
+    <div class="col-lg-7">
+        <form asp-controller="Admin" asp-action="Pizza" method="post" class="card shadow-sm" id="form-pizza" novalidate>
+            <div class="card-body">
+                <input type="hidden" asp-for="Id" />
+
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div class="alert alert-danger" role="alert" id="errores-pizza">
+                        No se guardó la pizza: revisa los campos marcados en rojo.
+                    </div>
+                }
+
+                <div class="mb-3">
+                    <label asp-for="Nombre" class="form-label fw-semibold">Nombre *</label>
+                    <input asp-for="Nombre" class="form-control @Clase("Nombre")" maxlength="80" />
+                    <span asp-validation-for="Nombre" class="invalid-feedback d-block"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Descripcion" class="form-label fw-semibold">Descripción</label>
+                    <textarea asp-for="Descripcion" class="form-control @Clase("Descripcion")" rows="2" maxlength="300"></textarea>
+                    <span asp-validation-for="Descripcion" class="invalid-feedback d-block"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="PrecioBase" class="form-label fw-semibold">Precio base (pizza personal) *</label>
+                    <input asp-for="PrecioBase" type="number" step="any" min="0" class="form-control @Clase("PrecioBase")" />
+                    <span asp-validation-for="PrecioBase" class="invalid-feedback d-block"></span>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Ingredientes base *</label>
+                    <div class="row row-cols-2 g-1 p-2 border rounded @(Clase("IngredientesBaseIds") == "" ? "" : "border-danger")">
+                        @foreach (var ing in Model.Ingredientes)
+                        {
+                            <div class="col">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="IngredientesBaseIds" value="@ing.Id"
+                                           id="ing-@ing.Id" @(Model.IngredientesBaseIds.Contains(ing.Id) ? "checked" : "") />
+                                    <label class="form-check-label" for="ing-@ing.Id">@ing.Nombre</label>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <span asp-validation-for="IngredientesBaseIds" class="text-danger small"></span>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-danger">Guardar pizza</button>
+                    <a class="btn btn-outline-secondary" asp-action="Index">Cancelar</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
