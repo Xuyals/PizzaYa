@@ -32,6 +32,7 @@ if (!string.IsNullOrWhiteSpace(cadenaSupabase))
 else
 {
     builder.Services.AddSingleton<IMenuRepository>(InMemoryMenuRepository.ConDatosDeEjemplo());
+    builder.Services.AddSingleton<IPedidoRepository, InMemoryPedidoRepository>();
 }
 builder.Services.AddSingleton<PersonalizacionService>();
 
