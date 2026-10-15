@@ -1,12 +1,64 @@
-@model PizzaYa.Models.Pedido
+@model PizzaYa.Models.SeguimientoViewModel
+@using PizzaYa.Models
 @{
-    ViewData["Title"] = "Seguimiento del pedido";
+    ViewData["Title"] = "Consultar mi pedido";
+    var co = new System.Globalization.CultureInfo("es-CO");
+    var estados = EstadoPedido.Todos;
 }
 
-<div class="card shadow-sm">
-    <div class="card-header fw-bold">Pedido @Model.NumeroPedido</div>
-    <div class="card-body">
-        <p><strong>Cliente:</strong> @Model.NombreCliente</p>
-        <p class="mb-0"><strong>Estado actual:</strong> <span class="badge bg-warning text-dark">@Model.Estado</span></p>
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <h1 class="h3 fw-bold mb-3">Consultar mi pedido</h1>
+
+        <form method="get" asp-controller="Pedidos" asp-action="Seguimiento" class="card shadow-sm mb-4">
+            <div class="card-body">
+                <label for="numero" class="form-label fw-semibold">Número de pedido</label>
+                <div class="input-group">
+                    <input id="numero" name="numero" value="@Model.Numero" class="form-control font-monospace"
+                           placeholder="PZ-20261014-A3F7" autocomplete="off" />
+                    <button type="submit" class="btn btn-danger">Consultar</button>
+                </div>
+            </div>
+        </form>
+
+        @if (Model.Buscado && Model.Pedido is null)
+        {
+            <div class="alert alert-warning" role="alert" id="pedido-no-encontrado">
+                <strong>Pedido no encontrado.</strong> Revisa que el número esté bien escrito.
+            </div>
+        }
+        else if (Model.Pedido is { } pedido)
+        {
+            var posicion = estados.ToList().IndexOf(pedido.Estado);
+            <div class="card shadow-sm" id="detalle-pedido">
+                <div class="card-header fw-bold">Pedido @pedido.NumeroPedido</div>
+                <div class="card-body">
+                    <p class="mb-1"><strong>Cliente:</strong> @pedido.NombreCliente</p>
+                    <p class="mb-3"><strong>Hecho el:</strong> @pedido.CreadoEn.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</p>
+                    <h2 class="h5">
+                        Estado actual:
+                        <span class="badge bg-warning text-dark" id="estado-actual">@pedido.Estado</span>
+                    </h2>
+                    <ol class="list-inline mt-3 mb-4">
+                        @for (var i = 0; i < estados.Count; i++)
+                        {
+                            <li class="list-inline-item badge @(i <= posicion ? "bg-success" : "bg-secondary")">@estados[i]</li>
+                        }
+                    </ol>
+                    <ul class="list-group list-group-flush">
+                        @foreach (var item in pedido.Items)
+                        {
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>@item.Cantidad × @item.NombrePizza (@item.NombreTamano)</span>
+                                <span>@item.Subtotal.ToString("C0", co)</span>
+                            </li>
+                        }
+                        <li class="list-group-item d-flex justify-content-between fw-bold">
+                            <span>Total</span><span>@pedido.Total.ToString("C0", co)</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        }
     </div>
 </div>
