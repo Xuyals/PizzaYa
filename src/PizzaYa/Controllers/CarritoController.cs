@@ -11,11 +11,13 @@ public class CarritoController : Controller
 {
     private readonly CarritoService _carrito;
     private readonly PrecioService  _precio;
+    private readonly PedidoService  _pedidos;
 
-    public CarritoController(CarritoService carrito, PrecioService precio)
+    public CarritoController(CarritoService carrito, PrecioService precio, PedidoService pedidos)
     {
         _carrito = carrito;
         _precio  = precio;
+        _pedidos = pedidos;
     }
 
     // GET: /Carrito
@@ -79,7 +81,7 @@ public class CarritoController : Controller
     // POST: /Carrito/Confirmar
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Confirmar(ConfirmarPedidoViewModel vm)
+    public async Task<IActionResult> Confirmar(ConfirmarPedidoViewModel vm)
     {
         // Recargamos el carrito desde sesión (no llega en el POST)
         var carrito = _carrito.ObtenerCarrito(HttpContext.Session);
@@ -107,11 +109,14 @@ public class CarritoController : Controller
             return View(vm);
 
         // ── Pedido confirmado ──────────────────────────────────────────
-        var numeroPedido = _carrito.GenerarNumeroPedido();
+        // Se guarda en la misma tabla que lee el módulo de pedidos (HU4), en estado "Recibido"
+        var pedido = await _pedidos.CrearDesdeCarritoAsync(carrito, new PedidoService.DatosConfirmacion(
+            _carrito.GenerarNumeroPedido(), vm.Nombre, vm.Telefono, vm.EsDomicilio, vm.Direccion,
+            vm.CostoDomicilio, vm.Descuento));
 
         var confirmado = new PedidoConfirmadoViewModel
         {
-            NumeroPedido   = numeroPedido,
+            NumeroPedido   = pedido.NumeroPedido,
             Nombre         = vm.Nombre,
             Telefono       = vm.Telefono,
             Direccion      = vm.EsDomicilio ? vm.Direccion : null,

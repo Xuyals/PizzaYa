@@ -40,6 +40,7 @@ builder.Services.AddSingleton<PersonalizacionService>();
 builder.Services.AddSingleton<InventarioService>(); // HU5 (Equipo 4)
 builder.Services.AddSingleton<PrecioService>();
 builder.Services.AddSingleton<CarritoService>();
+builder.Services.AddScoped<PedidoService>();
 
 var app = builder.Build();
 
