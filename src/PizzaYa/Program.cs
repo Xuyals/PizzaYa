@@ -35,6 +35,8 @@ else
     builder.Services.AddSingleton<IPedidoRepository, InMemoryPedidoRepository>();
 }
 builder.Services.AddSingleton<PersonalizacionService>();
+builder.Services.AddSingleton<PrecioService>();
+builder.Services.AddSingleton<CarritoService>();
 
 var app = builder.Build();
 

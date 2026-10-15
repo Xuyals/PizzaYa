@@ -1,0 +1,177 @@
+@model ResumenConPrecioViewModel
+@using PizzaYa.Models
+@{
+    ViewData["Title"] = "Precio de tu pizza";
+    var co = new System.Globalization.CultureInfo("es-CO");
+}
+
+<div class="row justify-content-center g-4">
+
+    @* ── Columna izquierda: detalle de la pizza ── *@
+    <div class="col-lg-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-danger text-white fw-bold fs-5">
+                🍕 @Model.Pizza.Nombre
+            </div>
+            <div class="card-body">
+                <dl class="row mb-2">
+                    <dt class="col-5">Tamaño</dt>
+                    <dd class="col-7">@Model.Tamano.Nombre</dd>
+
+                    <dt class="col-5">Borde</dt>
+                    <dd class="col-7">@Model.Borde.Nombre</dd>
+
+                    <dt class="col-5">Ingredientes</dt>
+                    <dd class="col-7">
+                        @foreach (var i in Model.Pizza.IngredientesBase)
+                        {
+                            var quitado = Model.Quitados.Any(q => q.Id == i.Id);
+                            <span class="badge @(quitado ? "bg-secondary text-decoration-line-through" : "bg-light text-dark border") me-1 mb-1">
+                                @i.Nombre
+                            </span>
+                        }
+                    </dd>
+
+                    @if (Model.Extras.Any())
+                    {
+                        <dt class="col-5">Extras</dt>
+                        <dd class="col-7">
+                            @foreach (var e in Model.Extras)
+                            {
+                                <span class="badge bg-warning text-dark me-1 mb-1">+ @e.Nombre</span>
+                            }
+                        </dd>
+                    }
+                </dl>
+
+                <a class="btn btn-sm btn-outline-secondary" asp-controller="Menu" asp-action="Personalizar" asp-route-id="@Model.Pizza.Id">
+                    ✎ Editar pizza
+                </a>
+            </div>
+        </div>
+    </div>
+
+    @* ── Columna derecha: precio, entrega y cupón ── *@
+    <div class="col-lg-6">
+
+        @* Desglose de precio *@
+        <div class="card shadow-sm mb-3">
+            <div class="card-header fw-bold">💰 Desglose de precio</div>
+            <div class="card-body p-0">
+                <table class="table table-sm mb-0">
+                    <tbody>
+                        <tr>
+                            <td>Precio base (@Model.Pizza.Nombre)</td>
+                            <td class="text-end">@Model.PrecioBase.ToString("C0", co)</td>
+                        </tr>
+                        <tr>
+                            <td>× Factor tamaño (@Model.Tamano.Nombre @Model.Tamano.FactorPrecio.ToString("0.##")x)</td>
+                            <td class="text-end">@Model.PrecioConTamano.ToString("C0", co)</td>
+                        </tr>
+                        @if (Model.PrecioBorde > 0)
+                        {
+                            <tr>
+                                <td>Borde: @Model.Borde.Nombre</td>
+                                <td class="text-end">+ @Model.PrecioBorde.ToString("C0", co)</td>
+                            </tr>
+                        }
+                        @if (Model.PrecioExtras > 0)
+                        {
+                            <tr>
+                                <td>Extras (@Model.Extras.Count ing.)</td>
+                                <td class="text-end">+ @Model.PrecioExtras.ToString("C0", co)</td>
+                            </tr>
+                        }
+                        @if (Model.CostoDomicilio > 0)
+                        {
+                            <tr class="table-info">
+                                <td>🛵 Domicilio</td>
+                                <td class="text-end">+ @Model.CostoDomicilio.ToString("C0", co)</td>
+                            </tr>
+                        }
+                        @if (Model.Descuento > 0)
+                        {
+                            <tr class="table-success">
+                                <td>🏷️ Descuento (@Model.CodigoCupon)</td>
+                                <td class="text-end text-success">- @Model.Descuento.ToString("C0", co)</td>
+                            </tr>
+                        }
+                        <tr class="fw-bold fs-5 table-dark">
+                            <td>TOTAL</td>
+                            <td class="text-end text-warning" id="precio-total">
+                                @Model.Total.ToString("C0", co)
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        @* Tipo de entrega *@
+        <div class="card shadow-sm mb-3">
+            <div class="card-header fw-bold">🚚 Tipo de entrega</div>
+            <div class="card-body">
+                <form asp-controller="Precio" asp-action="CambiarEntrega" method="post" id="form-entrega">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="cupon" value="@Model.CodigoCupon" />
+                    <div class="d-flex gap-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="esDomicilio" id="rb-tienda"
+                                   value="false" @(!Model.EsDomicilio ? "checked" : "")
+                                   onchange="document.getElementById('form-entrega').submit()">
+                            <label class="form-check-label" for="rb-tienda">
+                                🏪 Recoger en tienda <span class="badge bg-success">Gratis</span>
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="esDomicilio" id="rb-domicilio"
+                                   value="true" @(Model.EsDomicilio ? "checked" : "")
+                                   onchange="document.getElementById('form-entrega').submit()">
+                            <label class="form-check-label" for="rb-domicilio">
+                                🛵 Domicilio <span class="badge bg-info text-dark">+ $5.000</span>
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        @* Cupón de descuento *@
+        <div class="card shadow-sm mb-3">
+            <div class="card-header fw-bold">🏷️ Cupón de descuento</div>
+            <div class="card-body">
+                <form asp-controller="Precio" asp-action="AplicarCupon" method="post" class="d-flex gap-2">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="esDomicilio" value="@Model.EsDomicilio.ToString().ToLower()" />
+                    <input type="text" name="cupon" class="form-control form-control-sm"
+                           placeholder="Ej: PIZZA10" value="@Model.CodigoCupon" id="input-cupon" />
+                    <button type="submit" class="btn btn-sm btn-outline-primary">Aplicar</button>
+                </form>
+                @if (!string.IsNullOrEmpty(Model.MensajeCupon))
+                {
+                    <div class="mt-2 @(Model.CuponAplicado ? "text-success" : "text-danger") small fw-semibold">
+                        @Model.MensajeCupon
+                    </div>
+                }
+            </div>
+        </div>
+
+        @* Acción: Agregar al carrito *@
+        <form asp-controller="Precio" asp-action="AgregarAlCarrito" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="esDomicilio" value="@Model.EsDomicilio.ToString().ToLower()" />
+            <input type="hidden" name="cupon" value="@Model.CodigoCupon" />
+            <div class="d-grid">
+                <button type="submit" class="btn btn-danger btn-lg fw-bold shadow">
+                    🛒 Agregar al carrito — @Model.Total.ToString("C0", co)
+                </button>
+            </div>
+        </form>
+
+        <div class="mt-2 text-center">
+            <a class="text-muted small" asp-controller="Carrito" asp-action="Index">
+                Ver carrito actual →
+            </a>
+        </div>
+    </div>
+</div>
