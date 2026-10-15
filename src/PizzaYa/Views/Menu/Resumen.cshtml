@@ -1,0 +1,52 @@
+@model ResumenPizzaViewModel
+@{
+    ViewData["Title"] = "Tu pizza";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-body p-4">
+                <h1 class="h3 fw-bold mb-3">Tu pizza @Model.Pizza.Nombre</h1>
+
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Tamaño</dt>
+                    <dd class="col-sm-8">@Model.Tamano.Nombre</dd>
+
+                    <dt class="col-sm-4">Borde</dt>
+                    <dd class="col-sm-8">@Model.Borde.Nombre</dd>
+
+                    <dt class="col-sm-4">Ingredientes</dt>
+                    <dd class="col-sm-8">
+                        @foreach (var i in Model.Pizza.IngredientesBase)
+                        {
+                            var quitado = Model.Quitados.Any(q => q.Id == i.Id);
+                            <span class="me-2 @(quitado ? "ingrediente-quitado" : "")">@i.Nombre</span>
+                        }
+                    </dd>
+
+                    <dt class="col-sm-4">Extras</dt>
+                    <dd class="col-sm-8">
+                        @if (Model.Extras.Count == 0)
+                        {
+                            <span class="text-muted">Sin extras</span>
+                        }
+                        else
+                        {
+                            @string.Join(", ", Model.Extras.Select(e => e.Nombre))
+                        }
+                    </dd>
+                </dl>
+
+                <hr />
+
+                <div class="d-flex justify-content-between flex-wrap gap-2">
+                    <a class="btn btn-outline-secondary" asp-action="Personalizar" asp-route-id="@Model.Pizza.Id">Editar</a>
+                    @* El Equipo 2 (HU3 - Carrito) conecta aquí el botón "Agregar"
+                       leyendo la sesión "PizzaPersonalizada". *@
+                    <a class="btn btn-danger" asp-action="Index">Seguir viendo el menú</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
