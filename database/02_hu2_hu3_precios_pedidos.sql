@@ -26,9 +26,14 @@ create table if not exists pedidos (
     costo_domicilio numeric(10,2) not null default 0,
     descuento       numeric(10,2) not null default 0,
     total           numeric(10,2) not null,
-    estado          text          not null default 'pendiente',
+    estado          text          not null default 'Recibido',
     creado_en       timestamptz   not null default now()
 );
+
+-- Esta es la única tabla de pedidos: la usan el carrito (HU3) y el módulo de pedidos (HU4).
+-- Si ya existía con el estado inicial anterior, se ajusta sin perder datos.
+alter table pedidos alter column estado set default 'Recibido';
+update pedidos set estado = 'Recibido' where estado = 'pendiente';
 
 -- Items del pedido (HU3)
 create table if not exists pedido_items (

@@ -32,7 +32,7 @@ tests/PizzaYa.Tests/      Pruebas de los criterios de aceptación
 ```
 
 ## Cómo correrlo
-1. Crear las tablas: en Supabase abrir **SQL Editor**, pegar y ejecutar en orden `database/01_hu1_menu_pizzas.sql` y `database/05_hu5_inventario.sql`.
+1. Crear las tablas: en Supabase abrir **SQL Editor**, pegar y ejecutar en orden `database/01_hu1_menu_pizzas.sql`, `database/02_hu2_hu3_precios_pedidos.sql` y `database/05_hu5_inventario.sql`.
 2. Copiar la cadena de conexión: **Project Settings → Database → Connection string → .NET**
    (usar la del *Session pooler*) y guardarla como secreto local, **nunca en el repositorio**:
    ```bash
