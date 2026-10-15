@@ -7,10 +7,10 @@ Se trabaja con Kanban; el tablero, las políticas y los roles están en [docs/ka
 | HU | Historia | Equipo | Rama | Estado |
 |----|----------|--------|------|--------|
 | 1 | Menú de pizzas y personalización | 1 | `feature/HU1-pizzas` | En `main`, completa |
-| 2 | Cálculo de precio | 2 | `feature/equipo2-hu2-hu3` | En PR de integración, pendiente de unir |
-| 3 | Carrito y confirmación del pedido | 2 | `feature/equipo2-hu2-hu3` | En PR de integración, pendiente de unir |
+| 2 | Cálculo de precio | 2 | `feature/equipo2-hu2-hu3` | En `main`, con pendientes del equipo (ver PR 6) |
+| 3 | Carrito y confirmación del pedido | 2 | `feature/equipo2-hu2-hu3` | En `main`, con pendientes del equipo (ver PR 6) |
 | 4 | Pedidos y estados | 3 | `feature/HU4-pedidos_estados` | En `main`, incompleta (ver issue "HU4 incompleta") |
-| 5 | Inventario y proveedores | 4 | `feature/HU5-inventario_proveedores` | En PR de integración, pendiente de unir |
+| 5 | Inventario y proveedores | 4 | `feature/HU5-inventario_proveedores` | En `main`, pendiente de aprobación del PO |
 | 6 | Perfil, favoritas y cupones | 5 | `feature/HU6-perfil` | Sin código todavía |
 
 ## Tecnologías
