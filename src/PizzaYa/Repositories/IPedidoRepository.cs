@@ -12,6 +12,9 @@ public interface IPedidoRepository
     /// <summary>Busca por el número que ve el cliente (por ejemplo PZ-20261014-A3F7).</summary>
     Task<Pedido?> ObtenerPorNumeroAsync(string numeroPedido);
 
+    /// <summary>El pedido más reciente del cliente registrado, o null si todavía no ha pedido (HU6).</summary>
+    Task<Pedido?> ObtenerUltimoPorUsuarioAsync(int usuarioId);
+
     /// <summary>Todos los pedidos, del más antiguo al más reciente.</summary>
     Task<List<Pedido>> ObtenerTodosAsync();
 

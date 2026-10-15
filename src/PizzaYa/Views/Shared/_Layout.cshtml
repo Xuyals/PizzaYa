@@ -25,6 +25,12 @@
                         <li class="nav-item">
                             <a class="nav-link" asp-controller="Pedidos" asp-action="Seguimiento">Mi pedido</a>
                         </li>
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Perfil" asp-action="Index">Mi perfil</a>
+                            </li>
+                        }
                         @if (User.IsInRole(RolUsuario.Administrador) || User.IsInRole(RolUsuario.Cocinero))
                         {
                             <li class="nav-item">

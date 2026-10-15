@@ -21,9 +21,9 @@ public class SupabasePedidoRepository : IPedidoRepository
 
         pedido.Id = await conexion.ExecuteScalarAsync<int>(
             @"insert into pedidos (numero_pedido, nombre_cliente, telefono, es_domicilio, direccion,
-                                   subtotal, costo_domicilio, descuento, total, estado, creado_en)
+                                   subtotal, costo_domicilio, descuento, total, estado, creado_en, usuario_id)
               values (@NumeroPedido, @NombreCliente, @Telefono, @EsDomicilio, @Direccion,
-                      @Subtotal, @CostoDomicilio, @Descuento, @Total, @Estado, @CreadoEn)
+                      @Subtotal, @CostoDomicilio, @Descuento, @Total, @Estado, @CreadoEn, @UsuarioId)
               returning id;", pedido, tx);
 
         foreach (var item in pedido.Items)
@@ -67,6 +67,17 @@ public class SupabasePedidoRepository : IPedidoRepository
         var pedido = await conexion.QuerySingleOrDefaultAsync<Pedido>(
             "select * from pedidos where upper(numero_pedido) = upper(@Numero);",
             new { Numero = numeroPedido?.Trim() });
+        if (pedido is null) return null;
+        await CargarItemsAsync(conexion, new List<Pedido> { pedido });
+        return pedido;
+    }
+
+    public async Task<Pedido?> ObtenerUltimoPorUsuarioAsync(int usuarioId)
+    {
+        await using var conexion = await _dataSource.OpenConnectionAsync();
+        var pedido = await conexion.QueryFirstOrDefaultAsync<Pedido>(
+            "select * from pedidos where usuario_id = @UsuarioId order by creado_en desc, id desc limit 1;",
+            new { UsuarioId = usuarioId });
         if (pedido is null) return null;
         await CargarItemsAsync(conexion, new List<Pedido> { pedido });
         return pedido;

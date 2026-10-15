@@ -56,14 +56,15 @@ public class PrecioService
         List<Ingrediente> extras,
         List<Ingrediente> quitados,
         bool esDomicilio,
-        string? codigoCupon)
+        string? codigoCupon,
+        IReadOnlyList<CuponDescuento>? cupones = null)
     {
         var precioConTamano = pizza.PrecioBase * tamano.FactorPrecio;
         var precioExtras = extras.Sum(e => e.PrecioExtra);
         var precioBase = precioConTamano + borde.Precio + precioExtras;
         var costoDomicilio = esDomicilio ? CostoDomicilioFijo : 0m;
 
-        var (descuento, cuponAplicado, mensajeCupon) = ResolverCupon(codigoCupon, precioBase + costoDomicilio);
+        var (descuento, cuponAplicado, mensajeCupon) = ResolverCupon(codigoCupon, precioBase + costoDomicilio, cupones);
 
         var total = Math.Max(0m, precioBase + costoDomicilio - descuento);
 
@@ -89,20 +90,27 @@ public class PrecioService
     }
 
     /// <summary>
-    /// Busca el cupón y devuelve el descuento aplicable.
+    /// Busca el cupón y devuelve el descuento aplicable. Con <paramref name="cupones"/> (los de la base
+    /// de datos, HU6) usa esa lista; sin ella usa los tres cupones fijos. Un cupón que no existe o que
+    /// está vencido no da descuento: el total no cambia y se devuelve el mensaje de error.
     /// </summary>
     public (decimal Descuento, bool Aplicado, string? Mensaje) ResolverCupon(
         string? codigo,
-        decimal totalSinDescuento)
+        decimal totalSinDescuento,
+        IReadOnlyList<CuponDescuento>? cupones = null,
+        DateTime? ahora = null)
     {
         if (string.IsNullOrWhiteSpace(codigo))
             return (0m, false, null);
 
-        var cupon = _cupones.FirstOrDefault(
+        var cupon = (cupones ?? _cupones).FirstOrDefault(
             c => c.Codigo.Equals(codigo.Trim(), StringComparison.OrdinalIgnoreCase));
 
         if (cupon is null)
             return (0m, false, "Cupón no válido o expirado.");
+
+        if (cupon.EstaVencido(ahora ?? DateTime.UtcNow))
+            return (0m, false, $"El cupón {cupon.Codigo} está vencido.");
 
         // El descuento no puede superar el total
         var descuento = Math.Min(cupon.MontoDescuento, totalSinDescuento);

@@ -12,12 +12,13 @@ public class CarritoController : Controller
     private readonly CarritoService _carrito;
     private readonly PrecioService  _precio;
     private readonly PedidoService  _pedidos;
+    private readonly CuponService   _cupones;
 
-    public CarritoController(CarritoService carrito, PrecioService precio, PedidoService pedidos)
+    public CarritoController(CarritoService carrito, PedidoService pedidos, CuponService cupones)
     {
         _carrito = carrito;
-        _precio  = precio;
         _pedidos = pedidos;
+        _cupones = cupones;
     }
 
     // GET: /Carrito
@@ -58,7 +59,7 @@ public class CarritoController : Controller
     }
 
     // GET: /Carrito/Confirmar
-    public IActionResult Confirmar()
+    public async Task<IActionResult> Confirmar()
     {
         var carrito = _carrito.ObtenerCarrito(HttpContext.Session);
 
@@ -73,7 +74,23 @@ public class CarritoController : Controller
         {
             Carrito = carrito,
             EsDomicilio = false,
+            // Con sesión iniciada se adelanta el nombre
+            Nombre = User.Identity?.IsAuthenticated == true ? User.Identity.Name ?? "" : "",
+            // Cupón que el cliente escogió en su perfil (HU6)
+            CodigoCupon = HttpContext.Session.GetString(CuponService.ClaveSesion),
         };
+
+        // Si venía un cupón escogido, se muestra ya el descuento
+        if (!string.IsNullOrWhiteSpace(vm.CodigoCupon))
+        {
+            var (descuento, aplicado, mensaje) = await _cupones.ResolverAsync(vm.CodigoCupon, vm.Subtotal, User.UsuarioId());
+            vm.Descuento = descuento;
+            if (!aplicado)
+            {
+                ModelState.AddModelError(nameof(vm.CodigoCupon), mensaje ?? "Cupón no válido o expirado.");
+                HttpContext.Session.Remove(CuponService.ClaveSesion);
+            }
+        }
 
         return View(vm);
     }
@@ -97,12 +114,15 @@ public class CarritoController : Controller
         // Recalcular domicilio
         vm.CostoDomicilio = vm.EsDomicilio ? PrecioService.CostoDomicilioFijo : 0m;
 
-        // Aplicar cupón si viene
+        // Aplicar cupón si viene. Un cupón que no existe o está vencido (HU6) no cambia el total:
+        // se avisa con el error y el pedido no se confirma hasta corregirlo o dejar el campo vacío.
         if (!string.IsNullOrWhiteSpace(vm.CodigoCupon))
         {
-            var (descuento, aplicado, _) = _precio.ResolverCupon(
-                vm.CodigoCupon, vm.Subtotal + vm.CostoDomicilio);
+            var (descuento, aplicado, mensaje) = await _cupones.ResolverAsync(
+                vm.CodigoCupon, vm.Subtotal + vm.CostoDomicilio, User.UsuarioId());
             vm.Descuento = descuento;
+            if (!aplicado)
+                ModelState.AddModelError(nameof(vm.CodigoCupon), mensaje ?? "Cupón no válido o expirado.");
         }
 
         if (!ModelState.IsValid)
@@ -112,7 +132,7 @@ public class CarritoController : Controller
         // Se guarda en la misma tabla que lee el módulo de pedidos (HU4), en estado "Recibido"
         var pedido = await _pedidos.CrearDesdeCarritoAsync(carrito, new PedidoService.DatosConfirmacion(
             _carrito.GenerarNumeroPedido(), vm.Nombre, vm.Telefono, vm.EsDomicilio, vm.Direccion,
-            vm.CostoDomicilio, vm.Descuento));
+            vm.CostoDomicilio, vm.Descuento, User.UsuarioId()));
 
         var confirmado = new PedidoConfirmadoViewModel
         {
@@ -129,8 +149,9 @@ public class CarritoController : Controller
             FechaPedido    = DateTime.Now,
         };
 
-        // Vaciamos el carrito tras confirmar
+        // Vaciamos el carrito tras confirmar y el cupón escogido ya se usó
         _carrito.VaciarCarrito(HttpContext.Session);
+        HttpContext.Session.Remove(CuponService.ClaveSesion);
 
         return View("Confirmado", confirmado);
     }

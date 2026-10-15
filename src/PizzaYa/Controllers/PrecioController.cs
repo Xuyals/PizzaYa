@@ -16,12 +16,14 @@ public class PrecioController : Controller
     private readonly IMenuRepository _menu;
     private readonly PrecioService _precio;
     private readonly CarritoService _carrito;
+    private readonly CuponService _cupones;
 
-    public PrecioController(IMenuRepository menu, PrecioService precio, CarritoService carrito)
+    public PrecioController(IMenuRepository menu, PrecioService precio, CarritoService carrito, CuponService cupones)
     {
         _menu = menu;
         _precio = precio;
         _carrito = carrito;
+        _cupones = cupones;
     }
 
     // GET: /Precio/Resumen?esDomicilio=false&cupon=
@@ -130,6 +132,8 @@ public class PrecioController : Controller
         var extras   = ingredientes.Where(i => seleccion.ExtrasIds.Contains(i.Id)).ToList();
         var quitados = ingredientes.Where(i => seleccion.QuitadosIds.Contains(i.Id)).ToList();
 
-        return _precio.ArmarResumen(pizza, tamano, borde, extras, quitados, esDomicilio, cupon);
+        // Los cupones salen de la base de datos (HU6): pueden vencer o ser de un solo cliente
+        var cupones = await _cupones.ObtenerParaUsuarioAsync(User.UsuarioId());
+        return _precio.ArmarResumen(pizza, tamano, borde, extras, quitados, esDomicilio, cupon, cupones);
     }
 }

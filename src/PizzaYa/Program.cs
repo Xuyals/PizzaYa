@@ -43,6 +43,8 @@ if (!string.IsNullOrWhiteSpace(cadenaSupabase))
     builder.Services.AddScoped<IInventarioRepository, SupabaseInventarioRepository>(); // HU5 (Equipo 4)
     builder.Services.AddScoped<IPedidoRepository, SupabasePedidoRepository>();
     builder.Services.AddScoped<IUsuarioRepository, SupabaseUsuarioRepository>();
+    builder.Services.AddScoped<ICuponRepository, SupabaseCuponRepository>();
+    builder.Services.AddScoped<IFavoritaRepository, SupabaseFavoritaRepository>();
 }
 else
 {
@@ -50,6 +52,8 @@ else
     builder.Services.AddSingleton<IInventarioRepository>(InMemoryInventarioRepository.ConDatosDeEjemplo()); // HU5 (Equipo 4)
     builder.Services.AddSingleton<IPedidoRepository, InMemoryPedidoRepository>();
     builder.Services.AddSingleton<IUsuarioRepository, InMemoryUsuarioRepository>();
+    builder.Services.AddSingleton<ICuponRepository>(InMemoryCuponRepository.ConDatosDeEjemplo());
+    builder.Services.AddSingleton<IFavoritaRepository, InMemoryFavoritaRepository>();
 }
 builder.Services.AddSingleton<PersonalizacionService>();
 builder.Services.AddSingleton<InventarioService>(); // HU5 (Equipo 4)
@@ -57,6 +61,9 @@ builder.Services.AddSingleton<PrecioService>();
 builder.Services.AddSingleton<CarritoService>();
 builder.Services.AddScoped<PedidoService>();
 builder.Services.AddScoped<CuentaService>();
+builder.Services.AddScoped<CuponService>();
+builder.Services.AddScoped<ArmadoService>();
+builder.Services.AddScoped<PerfilService>();
 
 var app = builder.Build();
 
