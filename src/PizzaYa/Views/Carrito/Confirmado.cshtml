@@ -116,6 +116,9 @@
         </div>
 
         <div class="text-center">
+            <a class="btn btn-outline-danger btn-lg px-4 me-2" asp-controller="Pedidos" asp-action="Seguimiento" asp-route-numero="@Model.NumeroPedido">
+                Ver el estado de mi pedido
+            </a>
             <a class="btn btn-danger btn-lg px-5" asp-controller="Menu" asp-action="Index">
                 🍕 Hacer otro pedido
             </a>

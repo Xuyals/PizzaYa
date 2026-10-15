@@ -69,4 +69,53 @@ public class PedidoService
 
         return await _pedidos.CrearPedidoAsync(pedido);
     }
+
+    // ── HU4: estados ──────────────────────────────────────────────────
+
+    /// <summary>Resultado de intentar cambiar el estado de un pedido.</summary>
+    public record ResultadoCambio(bool Exitoso, string Mensaje, Pedido? Pedido = null);
+
+    /// <summary>Estado que sigue al actual, o null si ya está "Entregado" (o el estado no existe).</summary>
+    public static string? SiguienteEstado(string estadoActual)
+    {
+        var posicion = IndiceDe(estadoActual);
+        return posicion < 0 || posicion >= EstadoPedido.Todos.Count - 1 ? null : EstadoPedido.Todos[posicion + 1];
+    }
+
+    /// <summary>Solo se permite pasar al estado inmediatamente siguiente: no se salta ni se retrocede.</summary>
+    public static bool PuedeCambiar(string estadoActual, string estadoNuevo) =>
+        SiguienteEstado(estadoActual) == estadoNuevo;
+
+    /// <summary>Cambia el estado del pedido a <paramref name="estadoNuevo"/> si es el que sigue en el orden.</summary>
+    public async Task<ResultadoCambio> CambiarEstadoAsync(int pedidoId, string estadoNuevo)
+    {
+        var pedido = await _pedidos.ObtenerPorIdAsync(pedidoId);
+        if (pedido is null)
+            return new ResultadoCambio(false, "Pedido no encontrado.");
+
+        if (!PuedeCambiar(pedido.Estado, estadoNuevo))
+        {
+            var siguiente = SiguienteEstado(pedido.Estado);
+            var mensaje = siguiente is null
+                ? $"El pedido {pedido.NumeroPedido} ya está \"{pedido.Estado}\" y no puede cambiar."
+                : $"El pedido {pedido.NumeroPedido} está \"{pedido.Estado}\": solo puede pasar a \"{siguiente}\". No se puede saltar ni devolver un estado.";
+            return new ResultadoCambio(false, mensaje, pedido);
+        }
+
+        var cambio = await _pedidos.ActualizarEstadoAsync(pedido.Id, pedido.Estado, estadoNuevo);
+        if (!cambio)
+            return new ResultadoCambio(false,
+                $"El pedido {pedido.NumeroPedido} acaba de cambiar de estado. Revisa el panel e inténtalo de nuevo.",
+                await _pedidos.ObtenerPorIdAsync(pedido.Id));
+
+        pedido.Estado = estadoNuevo;
+        return new ResultadoCambio(true, $"El pedido {pedido.NumeroPedido} pasó a \"{estadoNuevo}\".", pedido);
+    }
+
+    private static int IndiceDe(string estado)
+    {
+        for (var i = 0; i < EstadoPedido.Todos.Count; i++)
+            if (EstadoPedido.Todos[i] == estado) return i;
+        return -1;
+    }
 }

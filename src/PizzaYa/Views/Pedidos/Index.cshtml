@@ -1,0 +1,68 @@
+@model List<PizzaYa.Models.Pedido>
+@using PizzaYa.Models
+@using PizzaYa.Services
+@{
+    ViewData["Title"] = "Panel de cocina";
+}
+
+<h1 class="h3 fw-bold mb-1">Panel de cocina</h1>
+<p class="text-muted">Pedidos del más antiguo al más reciente.</p>
+
+@if (TempData["Exito"] is string exito)
+{
+    <div class="alert alert-success" role="alert">@exito</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger" role="alert">@error</div>
+}
+
+@if (Model.Count == 0)
+{
+    <div class="alert alert-info" id="sin-pedidos">Todavía no hay pedidos confirmados.</div>
+}
+
+@foreach (var pedido in Model)
+{
+    var siguiente = PedidoService.SiguienteEstado(pedido.Estado);
+    <div class="card shadow-sm mb-3 @(pedido.Estado == EstadoPedido.Entregado ? "opacity-50" : "")" data-pedido="@pedido.NumeroPedido">
+        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <span class="fw-bold font-monospace">@pedido.NumeroPedido</span>
+            <span class="text-muted small">@pedido.CreadoEn.ToLocalTime().ToString("dd/MM/yyyy HH:mm") · @pedido.NombreCliente · @pedido.Telefono</span>
+            <span class="badge bg-warning text-dark">@pedido.Estado</span>
+        </div>
+        <div class="card-body">
+            <p class="small text-muted mb-2">
+                @(pedido.EsDomicilio ? $"Domicilio: {pedido.Direccion}" : "Recoge en tienda")
+            </p>
+            @foreach (var item in pedido.Items)
+            {
+                <div class="mb-2">
+                    <strong>@item.Cantidad × @item.NombrePizza</strong>
+                    <span class="text-muted">— @item.NombreTamano, borde @item.NombreBorde</span>
+                    <div class="small">
+                        <span>Ingredientes: @(item.IngredientesBase.Count > 0 ? string.Join(", ", item.IngredientesBase) : "—")</span>
+                        @if (item.ExtrasNombres.Count > 0)
+                        {
+                            <div class="text-success">Extras: @string.Join(", ", item.ExtrasNombres)</div>
+                        }
+                        @if (item.QuitadosNombres.Count > 0)
+                        {
+                            <div class="text-danger">Sin: @string.Join(", ", item.QuitadosNombres)</div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+        @if (siguiente is not null)
+        {
+            <div class="card-footer text-end">
+                <form method="post" asp-controller="Pedidos" asp-action="Cambiar">
+                    <input type="hidden" name="id" value="@pedido.Id" />
+                    <input type="hidden" name="nuevoEstado" value="@siguiente" />
+                    <button type="submit" class="btn btn-sm btn-danger">Pasar a "@siguiente"</button>
+                </form>
+            </div>
+        }
+    </div>
+}

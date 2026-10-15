@@ -124,3 +124,15 @@ public class PedidoConfirmadoViewModel
 /// Cupones de descuento válidos (HU2).
 /// </summary>
 public record CuponDescuento(string Codigo, decimal MontoDescuento, string Descripcion);
+
+// ─────────────────────────────────────────────────────────
+// HU4 – Seguimiento del pedido por el cliente
+// ─────────────────────────────────────────────────────────
+
+/// <summary>Modelo de la consulta del cliente: <see cref="Buscado"/> es true si ya escribió un número.</summary>
+public class SeguimientoViewModel
+{
+    public string? Numero { get; set; }
+    public bool Buscado { get; set; }
+    public Pedido? Pedido { get; set; }
+}
