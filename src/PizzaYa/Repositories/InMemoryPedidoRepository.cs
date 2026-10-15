@@ -41,6 +41,13 @@ public class InMemoryPedidoRepository : IPedidoRepository
                 string.Equals(p.NumeroPedido, numeroPedido?.Trim(), StringComparison.OrdinalIgnoreCase)));
     }
 
+    public Task<Pedido?> ObtenerUltimoPorUsuarioAsync(int usuarioId)
+    {
+        lock (_candado)
+            return Task.FromResult(_pedidos.Where(p => p.UsuarioId == usuarioId)
+                .OrderByDescending(p => p.CreadoEn).ThenByDescending(p => p.Id).FirstOrDefault());
+    }
+
     public Task<List<Pedido>> ObtenerTodosAsync()
     {
         lock (_candado)

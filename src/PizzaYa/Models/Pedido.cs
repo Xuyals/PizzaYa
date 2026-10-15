@@ -34,6 +34,9 @@ public class Pedido
     public string Estado { get; set; } = EstadoPedido.Recibido;
     public DateTime CreadoEn { get; set; } = DateTime.UtcNow;
 
+    /// <summary>Cliente registrado dueño del pedido (HU6); null si confirmó sin iniciar sesión.</summary>
+    public int? UsuarioId { get; set; }
+
     public List<PedidoItem> Items { get; set; } = new();
 }
 
