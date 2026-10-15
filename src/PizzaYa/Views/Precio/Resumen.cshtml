@@ -5,6 +5,15 @@
     var co = new System.Globalization.CultureInfo("es-CO");
 }
 
+@if (TempData["Exito"] is string exitoTemp)
+{
+    <div class="alert alert-success" role="alert">@exitoTemp</div>
+}
+@if (TempData["Error"] is string errorTemp)
+{
+    <div class="alert alert-danger" role="alert">@errorTemp</div>
+}
+
 <div class="row justify-content-center g-4">
 
     @* ── Columna izquierda: detalle de la pizza ── *@
@@ -167,6 +176,25 @@
                 </button>
             </div>
         </form>
+
+        @* HU6: guardar esta pizza como favorita (solo con sesión iniciada) *@
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <form asp-controller="Perfil" asp-action="MarcarFavorita" method="post" class="mt-2">
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-outline-warning" id="btn-favorita">
+                        ⭐ Marcar como favorita
+                    </button>
+                </div>
+            </form>
+        }
+        else
+        {
+            <div class="mt-2 text-center small">
+                <a asp-controller="Cuenta" asp-action="Ingresar" asp-route-returnUrl="/Precio/Resumen">Inicia sesión</a>
+                para guardar esta pizza como favorita.
+            </div>
+        }
 
         <div class="mt-2 text-center">
             <a class="text-muted small" asp-controller="Carrito" asp-action="Index">

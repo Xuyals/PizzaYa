@@ -7,6 +7,15 @@
 
 <h1 class="h3 fw-bold mb-4">📋 Confirmar pedido</h1>
 
+@if (TempData["Exito"] is string exitoTemp)
+{
+    <div class="alert alert-success" role="alert">@exitoTemp</div>
+}
+@if (TempData["Error"] is string errorTemp)
+{
+    <div class="alert alert-danger" role="alert">@errorTemp</div>
+}
+
 <div class="row g-4">
 
     @* ── Formulario de datos ── *@
@@ -66,6 +75,7 @@
                         <label asp-for="CodigoCupon" class="form-label fw-semibold">Cupón (opcional)</label>
                         <input asp-for="CodigoCupon" class="form-control" id="input-cupon"
                                placeholder="Ej: PIZZA10" />
+                        <span asp-validation-for="CodigoCupon" class="text-danger small fw-semibold" id="error-cupon"></span>
                     </div>
 
                     <div class="d-grid mt-4">
@@ -97,9 +107,16 @@
                     <span>Subtotal</span>
                     <span>@Model.Subtotal.ToString("C0", co)</span>
                 </li>
+                @if (Model.Descuento > 0)
+                {
+                    <li class="list-group-item d-flex justify-content-between text-success">
+                        <span>🏷️ Descuento (@Model.CodigoCupon)</span>
+                        <span id="descuento-resumen">- @Model.Descuento.ToString("C0", co)</span>
+                    </li>
+                }
                 <li class="list-group-item d-flex justify-content-between fw-bold fs-5 list-group-item-dark">
                     <span>Total estimado</span>
-                    <span id="total-resumen">@Model.Total.ToString("C0", co)</span>
+                    <span id="total-resumen">@Model.TotalConDescuento.ToString("C0", co)</span>
                 </li>
             </ul>
         </div>
