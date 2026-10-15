@@ -27,10 +27,12 @@ if (!string.IsNullOrWhiteSpace(cadenaSupabase))
 {
     builder.Services.AddSingleton(NpgsqlDataSource.Create(cadenaSupabase));
     builder.Services.AddScoped<IMenuRepository, SupabaseMenuRepository>();
+    builder.Services.AddScoped<IPedidoRepository, SupabasePedidoRepository>();
 }
 else
 {
     builder.Services.AddSingleton<IMenuRepository>(InMemoryMenuRepository.ConDatosDeEjemplo());
+    builder.Services.AddSingleton<IPedidoRepository, InMemoryPedidoRepository>();
 }
 builder.Services.AddSingleton<PersonalizacionService>();
 builder.Services.AddSingleton<PrecioService>();
