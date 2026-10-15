@@ -9,6 +9,17 @@ public class IngredienteInventario
     public decimal Cantidad { get; set; }
     public decimal CantidadMinima { get; set; }
 
+    /// <summary>
+    /// Cuánto se gasta de este ingrediente (en su unidad) en una pizza personal; una mediana o familiar
+    /// gasta esa cantidad por el factor de su tamaño (HU9).
+    /// </summary>
+    public decimal ConsumoPorPizza { get; set; } = ConsumoPorDefecto;
+
+    public const decimal ConsumoPorDefecto = 0.1m;
+
+    /// <summary>Agotado: en cero (o menos). No se puede escoger como extra y deja sin stock a las pizzas que lo llevan (HU9).</summary>
+    public bool Agotado => Cantidad <= 0;
+
     /// <summary>"Por agotarse": la cantidad está por debajo de la mínima (igual al mínimo todavía no cuenta).</summary>
     public bool PorAgotarse => Cantidad < CantidadMinima;
 }
@@ -65,4 +76,13 @@ public class NuevoPedidoViewModel
 {
     public List<IngredienteInventario> Ingredientes { get; set; } = new();
     public NuevoPedidoProveedor Pedido { get; set; } = new();
+}
+
+/// <summary>Un ingrediente que no alcanza para el pedido (HU9).</summary>
+public record FaltanteInventario(int IngredienteId, string Nombre, string Unidad, decimal Disponible, decimal Necesario);
+
+/// <summary>Resultado de descontar el inventario: si no alcanza, no se descontó nada y se listan los faltantes.</summary>
+public record ResultadoDescuento(bool Exitoso, IReadOnlyList<FaltanteInventario> Faltantes)
+{
+    public static ResultadoDescuento Ok() => new(true, Array.Empty<FaltanteInventario>());
 }

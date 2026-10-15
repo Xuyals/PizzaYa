@@ -8,6 +8,11 @@
     <p class="text-muted mb-0">Escoge una pizza y ármala a tu gusto.</p>
 </div>
 
+@if (TempData["Error"] is string aviso)
+{
+    <div class="alert alert-warning" role="alert">@aviso</div>
+}
+
 @if (!Model.HayPizzas)
 {
     <div class="alert alert-warning text-center py-5" role="status">
@@ -43,7 +48,15 @@ else
                         </p>
                         <div class="mt-auto d-flex justify-content-between align-items-center">
                             <span class="fs-5 fw-bold">@Formato.Pesos(pizza.PrecioBase)</span>
-                            <a class="btn btn-danger" asp-action="Personalizar" asp-route-id="@pizza.Id">Personalizar</a>
+                            @if (Model.PizzasSinStock.Contains(pizza.Id))
+                            {
+                                <span class="badge text-bg-secondary me-2" data-sin-stock="@pizza.Id">No disponible</span>
+                                <button type="button" class="btn btn-secondary" disabled>Personalizar</button>
+                            }
+                            else
+                            {
+                                <a class="btn btn-danger" asp-action="Personalizar" asp-route-id="@pizza.Id">Personalizar</a>
+                            }
                         </div>
                     </div>
                 </div>

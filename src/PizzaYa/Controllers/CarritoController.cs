@@ -14,14 +14,16 @@ public class CarritoController : Controller
     private readonly PedidoService  _pedidos;
     private readonly CuponService   _cupones;
     private readonly ConfiguracionService _configuracion;
+    private readonly ConsumoService _consumo;
 
     public CarritoController(CarritoService carrito, PedidoService pedidos, CuponService cupones,
-        ConfiguracionService configuracion)
+        ConfiguracionService configuracion, ConsumoService consumo)
     {
         _carrito = carrito;
         _pedidos = pedidos;
         _cupones = cupones;
         _configuracion = configuracion;
+        _consumo = consumo;
     }
 
     // GET: /Carrito
@@ -133,11 +135,29 @@ public class CarritoController : Controller
         if (!ModelState.IsValid)
             return View(vm);
 
+        // ── Inventario (HU9) ───────────────────────────────────────────
+        // Se descuentan los ingredientes del pedido; si no alcanzan, no se confirma y se avisa al cliente
+        var reserva = await _consumo.DescontarAsync(carrito);
+        if (!reserva.Exitoso)
+        {
+            ModelState.AddModelError("", reserva.Mensaje!);
+            return View(vm);
+        }
+
         // ── Pedido confirmado ──────────────────────────────────────────
         // Se guarda en la misma tabla que lee el módulo de pedidos (HU4), en estado "Recibido"
-        var pedido = await _pedidos.CrearDesdeCarritoAsync(carrito, new PedidoService.DatosConfirmacion(
-            _carrito.GenerarNumeroPedido(), vm.Nombre, vm.Telefono, vm.EsDomicilio, vm.Direccion,
-            vm.CostoDomicilio, vm.Descuento, User.UsuarioId()));
+        Pedido pedido;
+        try
+        {
+            pedido = await _pedidos.CrearDesdeCarritoAsync(carrito, new PedidoService.DatosConfirmacion(
+                _carrito.GenerarNumeroPedido(), vm.Nombre, vm.Telefono, vm.EsDomicilio, vm.Direccion,
+                vm.CostoDomicilio, vm.Descuento, User.UsuarioId()));
+        }
+        catch
+        {
+            await _consumo.ReponerAsync(reserva.Descontado); // el pedido no se guardó: el inventario no debe bajar
+            throw;
+        }
 
         var confirmado = new PedidoConfirmadoViewModel
         {

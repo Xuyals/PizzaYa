@@ -24,6 +24,7 @@
             <div class="card-header fw-bold">Datos de contacto y entrega</div>
             <div class="card-body">
                 <form asp-controller="Carrito" asp-action="Confirmar" method="post" id="form-confirmar" novalidate>
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert" id="error-inventario"></div>
                     @Html.AntiForgeryToken()
 
                     <div class="mb-3">

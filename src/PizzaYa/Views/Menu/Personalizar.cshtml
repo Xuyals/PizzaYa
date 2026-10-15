@@ -85,10 +85,20 @@
                 @foreach (var i in Model.Extras)
                 {
                     <div class="col form-check ps-5">
+                        @{ var agotado = Model.ExtrasAgotados.Contains(i.Id); }
                         <input class="form-check-input extra-check" type="checkbox" name="Seleccion.ExtrasIds"
-                               id="extra-@i.Id" value="@i.Id" checked="@s.ExtrasIds.Contains(i.Id)" />
-                        <label class="form-check-label" for="extra-@i.Id">
-                            @i.Nombre <small class="text-muted">+@Formato.Pesos(i.PrecioExtra)</small>
+                               id="extra-@i.Id" value="@i.Id" checked="@(!agotado && s.ExtrasIds.Contains(i.Id))"
+                               data-agotado="@(agotado ? "true" : "false")" disabled="@agotado" />
+                        <label class="form-check-label @(agotado ? "text-muted text-decoration-line-through" : "")" for="extra-@i.Id">
+                            @i.Nombre
+                            @if (agotado)
+                            {
+                                <span class="badge text-bg-secondary">Agotado</span>
+                            }
+                            else
+                            {
+                                <small class="text-muted">+@Formato.Pesos(i.PrecioExtra)</small>
+                            }
                         </label>
                     </div>
                 }
@@ -127,7 +137,7 @@
                 usados.textContent = marcados;
                 contador.classList.toggle('text-bg-danger', marcados >= maximo);
                 contador.classList.toggle('text-bg-secondary', marcados < maximo);
-                extras.forEach(c => c.disabled = !c.checked && marcados >= maximo);
+                extras.forEach(c => c.disabled = c.dataset.agotado === 'true' || (!c.checked && marcados >= maximo));
             }
 
             form.addEventListener('change', function () {

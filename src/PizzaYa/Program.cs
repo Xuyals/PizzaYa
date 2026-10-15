@@ -67,6 +67,7 @@ builder.Services.AddSingleton<CarritoService>();
 builder.Services.AddScoped<PedidoService>();
 builder.Services.AddScoped<CuentaService>();
 builder.Services.AddScoped<ConfiguracionService>();
+builder.Services.AddScoped<ConsumoService>();
 builder.Services.AddScoped<MenuAdminService>();
 builder.Services.AddScoped<CuponService>();
 builder.Services.AddScoped<ArmadoService>();
