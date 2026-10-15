@@ -29,7 +29,9 @@ public class InMemoryMenuRepository : IMenuRepository, IMenuAdminRepository
             ("Aceitunas", 3000m), ("Carne molida", 4000m), ("Cebolla", 1500m), ("Champiñones", 3000m),
             ("Jalapeños", 2500m), ("Jamón", 3500m), ("Maíz tierno", 2000m), ("Pepperoni", 4000m),
             ("Pimentón", 2000m), ("Piña", 2500m), ("Pollo", 4000m), ("Queso mozzarella", 3000m),
-            ("Salsa de tomate", 0m), ("Tocineta", 4500m),
+            ("Salsa de tomate", 0m), ("Tocineta", 4500m), ("Queso extra", 3000m), ("Carne", 4500m),
+            ("Chorizo", 4000m), ("Guacamole", 3500m), ("Chicharrón", 4500m), ("Carne de cerdo", 4500m),
+            ("Masa", 0m), ("Pasta de tomate", 0m), ("Queso base", 0m),
         }.Select((x, i) => new Ingrediente { Id = i + 1, Nombre = x.Item1, PrecioExtra = x.Item2 }).ToList();
 
         List<Ingrediente> De(params string[] nombres) =>
@@ -47,6 +49,9 @@ public class InMemoryMenuRepository : IMenuRepository, IMenuAdminRepository
                 IngredientesBase = De("Salsa de tomate", "Queso mozzarella", "Pollo", "Champiñones") },
             new() { Id = 5, Nombre = "Vegetariana", Descripcion = "Llena de vegetales frescos.", PrecioBase = 27000,
                 IngredientesBase = De("Salsa de tomate", "Queso mozzarella", "Champiñones", "Pimentón", "Cebolla", "Aceitunas", "Maíz tierno") },
+            new() { Id = 6, Nombre = "Arma tu pizza", Descripcion = "Crea una pizza a tu gusto con ingredientes seleccionados.",
+                PrecioBase = 22000, EsPizzaPersonalizada = true,
+                IngredientesBase = De("Masa", "Pasta de tomate", "Queso base") },
         };
 
         var tamanos = new List<Tamano>
@@ -61,6 +66,9 @@ public class InMemoryMenuRepository : IMenuRepository, IMenuAdminRepository
             new() { Id = 1, Nombre = "Tradicional", Precio = 0 },
             new() { Id = 2, Nombre = "Relleno de queso", Precio = 5000 },
             new() { Id = 3, Nombre = "Ajo y finas hierbas", Precio = 3000 },
+            new() { Id = 4, Nombre = "Sin borde", Precio = 0 },
+            new() { Id = 5, Nombre = "Relleno de bocadillo", Precio = 4500 },
+            new() { Id = 6, Nombre = "Relleno de chocolate", Precio = 5000 },
         };
 
         return new InMemoryMenuRepository(pizzas, tamanos, bordes, ing);

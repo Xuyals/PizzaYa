@@ -78,7 +78,10 @@ on conflict (nombre) do nothing;
 insert into bordes (nombre, precio, orden) values
     ('Tradicional',            0, 1),
     ('Relleno de queso',    5000, 2),
-    ('Ajo y finas hierbas', 3000, 3)
+    ('Ajo y finas hierbas', 3000, 3),
+    ('Sin borde',              0, 4),
+    ('Relleno de bocadillo', 4500, 5),
+    ('Relleno de chocolate', 5000, 6)
 on conflict (nombre) do nothing;
 
 insert into ingredientes (nombre, precio_extra) values
@@ -95,7 +98,16 @@ insert into ingredientes (nombre, precio_extra) values
     ('Pimentón',         2000),
     ('Cebolla',          1500),
     ('Aceitunas',        3000),
-    ('Tocineta',         4500)
+    ('Tocineta',         4500),
+    ('Queso extra',       3000),
+    ('Carne',             4500),
+    ('Chorizo',           4000),
+    ('Guacamole',         3500),
+    ('Chicharrón',        4500),
+    ('Carne de cerdo',    4500),
+    ('Masa',                 0),
+    ('Pasta de tomate',      0),
+    ('Queso base',            0)
 on conflict (nombre) do nothing;
 
 insert into pizzas (nombre, descripcion, precio_base) values
@@ -120,4 +132,15 @@ from (values
 ) as v(pizza, ingrediente)
 join pizzas p       on p.nombre = v.pizza
 join ingredientes i on i.nombre = v.ingrediente
+on conflict do nothing;
+
+insert into pizzas (nombre, descripcion, precio_base)
+values ('Arma tu pizza', 'Crea una pizza a tu gusto con ingredientes seleccionados.', 22000)
+on conflict (nombre) do nothing;
+
+insert into pizza_ingredientes (pizza_id, ingrediente_id)
+select p.id, i.id
+from pizzas p
+join ingredientes i on i.nombre in ('Masa', 'Pasta de tomate', 'Queso base')
+where p.nombre = 'Arma tu pizza'
 on conflict do nothing;

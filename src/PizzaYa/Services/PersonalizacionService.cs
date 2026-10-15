@@ -5,6 +5,19 @@ namespace PizzaYa.Services;
 /// <summary>Reglas de negocio de la HU1 para armar una pizza.</summary>
 public class PersonalizacionService
 {
+    private static readonly HashSet<string> IngredientesLibres = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "Piña", "Champiñones", "Jalapeños", "Queso extra", "Pollo", "Carne",
+        "Chorizo", "Guacamole", "Chicharrón", "Carne de cerdo", "Jamón", "Pepperoni",
+    };
+
+    public IReadOnlySet<string> OpcionesDePizzaLibre => IngredientesLibres;
+
+    public IEnumerable<Ingrediente> FiltrarOpciones(Pizza pizza, IEnumerable<Ingrediente> ingredientes) =>
+        pizza.EsPizzaPersonalizada
+            ? ingredientes.Where(i => IngredientesLibres.Contains(i.Nombre))
+            : ingredientes;
+
     /// <summary>
     /// Valida la pizza armada contra el menú. Devuelve los errores por campo;
     /// si la lista está vacía la pizza es válida.
@@ -37,6 +50,8 @@ public class PersonalizacionService
             errores.Add((nameof(seleccion.ExtrasIds), "Algún ingrediente extra no está disponible."));
 
         var idsBase = pizza.IngredientesBase.Select(i => i.Id).ToHashSet();
+        if (pizza.EsPizzaPersonalizada && seleccion.QuitadosIds.Count > 0)
+            errores.Add((nameof(seleccion.QuitadosIds), "La masa, la pasta de tomate y el queso base vienen incluidos."));
         if (seleccion.QuitadosIds.Any(id => !idsBase.Contains(id)))
             errores.Add((nameof(seleccion.QuitadosIds), "Solo se pueden quitar ingredientes que traiga la pizza."));
 

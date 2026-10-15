@@ -55,7 +55,16 @@ from (values
     ('Pimentón',         'kg',  5.0,  2.0),
     ('Cebolla',          'kg',  9.0,  4.0),
     ('Aceitunas',        'kg',  3.0,  2.0),
-    ('Tocineta',         'kg',  4.0,  2.0)
+    ('Tocineta',         'kg',  4.0,  2.0),
+    ('Queso extra',      'kg',  8.0,  3.0),
+    ('Carne',            'kg',  8.0,  3.0),
+    ('Chorizo',          'kg',  8.0,  3.0),
+    ('Guacamole',        'kg',  8.0,  3.0),
+    ('Chicharrón',       'kg',  8.0,  3.0),
+    ('Carne de cerdo',   'kg',  8.0,  3.0),
+    ('Masa',             'kg', 30.0,  5.0),
+    ('Pasta de tomate',  'L',  30.0,  5.0),
+    ('Queso base',       'kg', 30.0,  5.0)
 ) as v(nombre, unidad, cantidad, minimo)
 where i.nombre = v.nombre
   and i.cantidad = 0
