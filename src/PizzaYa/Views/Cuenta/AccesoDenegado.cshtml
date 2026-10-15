@@ -1,0 +1,10 @@
+@{
+    ViewData["Title"] = "Acceso denegado";
+}
+
+<div class="text-center py-5">
+    <div class="display-3 mb-3">🔒</div>
+    <h1 class="h3 fw-bold">No tienes permiso para entrar aquí</h1>
+    <p class="text-muted">Esta sección es solo para el personal de la pizzería (administrador o cocinero).</p>
+    <a class="btn btn-danger" asp-controller="Menu" asp-action="Index">Volver al menú</a>
+</div>

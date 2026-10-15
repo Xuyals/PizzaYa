@@ -25,12 +25,37 @@
                         <li class="nav-item">
                             <a class="nav-link" asp-controller="Pedidos" asp-action="Seguimiento">Mi pedido</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Pedidos" asp-action="Index">Cocina</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Inventario" asp-action="Index">Inventario</a>
-                        </li>
+                        @if (User.IsInRole(RolUsuario.Administrador) || User.IsInRole(RolUsuario.Cocinero))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Pedidos" asp-action="Index">Cocina</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Inventario" asp-action="Index">Inventario</a>
+                            </li>
+                        }
+                    </ul>
+                    <ul class="navbar-nav ms-auto">
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <li class="nav-item">
+                                <span class="navbar-text me-2">Hola, @User.Identity.Name</span>
+                            </li>
+                            <li class="nav-item">
+                                <form asp-controller="Cuenta" asp-action="Salir" method="post" class="d-inline">
+                                    <button type="submit" class="btn btn-link nav-link">Salir</button>
+                                </form>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Cuenta" asp-action="Ingresar">Iniciar sesión</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Cuenta" asp-action="Registrar">Registrarme</a>
+                            </li>
+                        }
                     </ul>
                 </div>
             </div>
