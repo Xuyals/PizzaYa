@@ -26,9 +26,12 @@ create table if not exists pedidos (
     costo_domicilio numeric(10,2) not null default 0,
     descuento       numeric(10,2) not null default 0,
     total           numeric(10,2) not null,
+    metodo_pago     text not null default 'Antes de la entrega',
     estado          text          not null default 'Recibido',
     creado_en       timestamptz   not null default now()
 );
+
+alter table pedidos add column if not exists metodo_pago text not null default 'Antes de la entrega';
 
 -- Esta es la única tabla de pedidos: la usan el carrito (HU3) y el módulo de pedidos (HU4).
 -- Si ya existía con el estado inicial anterior, se ajusta sin perder datos.

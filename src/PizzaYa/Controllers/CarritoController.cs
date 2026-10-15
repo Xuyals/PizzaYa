@@ -120,6 +120,12 @@ public class CarritoController : Controller
         vm.ValorDomicilio = await _configuracion.ObtenerCostoDomicilioAsync();
         vm.CostoDomicilio = vm.EsDomicilio ? vm.ValorDomicilio : 0m;
 
+        if (!vm.EsDomicilio && vm.MetodoPago != MetodoPagoPedido.AntesDeLaEntrega &&
+            vm.MetodoPago != MetodoPagoPedido.AlRecoger)
+            ModelState.AddModelError(nameof(vm.MetodoPago), "Escoge una forma de pago válida.");
+        if (vm.EsDomicilio && vm.MetodoPago != MetodoPagoPedido.AntesDeLaEntrega)
+            ModelState.AddModelError(nameof(vm.MetodoPago), "Los pedidos a domicilio deben pagarse antes de la entrega.");
+
         // Aplicar cupón si viene. Un cupón que no existe o está vencido (HU6) no cambia el total:
         // se avisa con el error y el pedido no se confirma hasta corregirlo o dejar el campo vacío.
         if (!string.IsNullOrWhiteSpace(vm.CodigoCupon))
@@ -150,7 +156,7 @@ public class CarritoController : Controller
         {
             pedido = await _pedidos.CrearDesdeCarritoAsync(carrito, new PedidoService.DatosConfirmacion(
                 _carrito.GenerarNumeroPedido(), vm.Nombre, vm.Telefono, vm.EsDomicilio, vm.Direccion,
-                vm.CostoDomicilio, vm.Descuento, User.UsuarioId()));
+                vm.CostoDomicilio, vm.Descuento, User.UsuarioId(), vm.MetodoPago));
         }
         catch
         {
@@ -170,6 +176,7 @@ public class CarritoController : Controller
             CostoDomicilio = vm.CostoDomicilio,
             Descuento      = vm.Descuento,
             Total          = vm.TotalConDescuento,
+            MetodoPago     = vm.MetodoPago,
             FechaPedido    = DateTime.Now,
         };
 

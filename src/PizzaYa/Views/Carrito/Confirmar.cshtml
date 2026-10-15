@@ -71,6 +71,21 @@
                         <span asp-validation-for="Direccion" class="text-danger small"></span>
                     </div>
 
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Forma de pago *</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" asp-for="MetodoPago"
+                                   id="pago-anticipado" value="@MetodoPagoPedido.AntesDeLaEntrega" />
+                            <label class="form-check-label" for="pago-anticipado">Pagar antes de recibir el pedido</label>
+                        </div>
+                        <div class="form-check" id="opcion-pago-recoger">
+                            <input class="form-check-input" type="radio" asp-for="MetodoPago"
+                                   id="pago-recoger" value="@MetodoPagoPedido.AlRecoger" />
+                            <label class="form-check-label" for="pago-recoger">Pagar cuando recoja en la tienda</label>
+                        </div>
+                        <span asp-validation-for="MetodoPago" class="text-danger small"></span>
+                    </div>
+
                     @* Cupón (opcional) *@
                     <div class="mb-3">
                         <label asp-for="CodigoCupon" class="form-label fw-semibold">Cupón (opcional)</label>
@@ -136,12 +151,23 @@
         function toggleDireccion(valor) {
             const bloque = document.getElementById('bloque-direccion');
             bloque.style.display = (valor === 'true') ? 'block' : 'none';
+            const recoger = document.getElementById('opcion-pago-recoger');
+            const pagoRecoger = document.getElementById('pago-recoger');
+            if (valor === 'true') {
+                recoger.style.display = 'none';
+                pagoRecoger.checked = false;
+                document.getElementById('pago-anticipado').checked = true;
+            } else {
+                recoger.style.display = 'block';
+            }
         }
 
         // Inicializar estado según valor actual
         const rbDomicilio = document.getElementById('rb-domicilio');
         if (rbDomicilio && rbDomicilio.checked) {
             toggleDireccion('true');
+        } else {
+            toggleDireccion('false');
         }
 
         // Resaltar campos vacíos al intentar enviar

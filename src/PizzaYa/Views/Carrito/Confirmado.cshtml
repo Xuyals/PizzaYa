@@ -47,6 +47,9 @@
                             <span class="badge bg-success">🏪 Recoger en tienda</span>
                         }
                     </dd>
+
+                    <dt class="col-4">Pago</dt>
+                    <dd class="col-8">@Model.MetodoPago</dd>
                 </dl>
             </div>
         </div>
@@ -107,7 +110,7 @@
                             </tr>
                         }
                         <tr class="fw-bold fs-5 table-dark">
-                            <td>TOTAL PAGADO</td>
+                            <td>@(Model.MetodoPago == MetodoPagoPedido.AlRecoger ? "TOTAL A PAGAR" : "TOTAL PAGADO")</td>
                             <td class="text-end text-warning">@Model.Total.ToString("C0", co)</td>
                         </tr>
                     </tbody>
