@@ -27,6 +27,7 @@ if (!string.IsNullOrWhiteSpace(cadenaSupabase))
 {
     builder.Services.AddSingleton(NpgsqlDataSource.Create(cadenaSupabase));
     builder.Services.AddScoped<IMenuRepository, SupabaseMenuRepository>();
+    builder.Services.AddScoped<IPedidoRepository, SupabasePedidoRepository>();
 }
 else
 {

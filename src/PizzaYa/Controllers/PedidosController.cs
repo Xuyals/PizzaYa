@@ -1,52 +1,42 @@
 using Microsoft.AspNetCore.Mvc;
 using PizzaYa.Models;
-using System.Collections.Generic;
+using PizzaYa.Repositories;
 
 namespace PizzaYa.Controllers
 {
     public class PedidosController : Controller
     {
-        // Lista simulada temporal para almacenar pedidos en memoria
-        private static List<Pedido> _pedidosSimulados = new();
+        private readonly IPedidoRepository _pedidoRepository;
 
-        // GET: /Pedidos/Crear
+        public PedidosController(IPedidoRepository pedidoRepository)
+        {
+            _pedidoRepository = pedidoRepository;
+        }
+
         [HttpGet]
         public IActionResult Crear()
         {
             return View();
         }
 
-        // POST: /Pedidos/Crear
         [HttpPost]
-        public IActionResult Crear(Pedido pedido)
+        public async Task<IActionResult> Crear(Pedido pedido)
         {
             if (ModelState.IsValid)
             {
-                pedido.Id = _pedidosSimulados.Count + 1;
-                pedido.FechaCreacion = System.DateTime.Now;
-                pedido.Estado = "Pendiente";
-                _pedidosSimulados.Add(pedido);
-
-                // Redirige a la vista de seguimiento con el ID del pedido
-                return RedirectToAction("Seguimiento", new { id = pedido.Id });
+                var pedidoCreado = await _pedidoRepository.CrearPedidoAsync(pedido);
+                return RedirectToAction("Seguimiento", new { id = pedidoCreado.Id });
             }
             return View(pedido);
         }
 
-        // GET: /Pedidos/Seguimiento/5
-        public IActionResult Seguimiento(int id)
+        [HttpGet]
+        public async Task<IActionResult> Seguimiento(int id)
         {
-            var pedido = _pedidosSimulados.Find(p => p.Id == id);
+            var pedido = await _pedidoRepository.ObtenerPorIdAsync(id);
             if (pedido == null)
             {
-                // Objeto por defecto si no se encuentra en la lista temporal
-                pedido = new Pedido 
-                { 
-                    Id = id, 
-                    ClienteNombre = "Cliente de Prueba", 
-                    DireccionEntrega = "Calle Principal #123",
-                    Estado = "En Preparación" 
-                };
+                return NotFound();
             }
             return View(pedido);
         }
