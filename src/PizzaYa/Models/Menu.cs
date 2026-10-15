@@ -7,6 +7,10 @@ public class Pizza
     public string? Descripcion { get; set; }
     public decimal PrecioBase { get; set; }
     public string? ImagenUrl { get; set; }
+
+    /// <summary>false = oculta del menú del cliente (HU7). El menú de los clientes solo trae las disponibles.</summary>
+    public bool Disponible { get; set; } = true;
+
     public List<Ingrediente> IngredientesBase { get; set; } = new();
 }
 

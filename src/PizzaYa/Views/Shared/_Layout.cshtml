@@ -40,6 +40,12 @@
                                 <a class="nav-link" asp-controller="Inventario" asp-action="Index">Inventario</a>
                             </li>
                         }
+                        @if (User.IsInRole(RolUsuario.Administrador))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Admin" asp-action="Index">Administrar menú</a>
+                            </li>
+                        }
                     </ul>
                     <ul class="navbar-nav ms-auto">
                         @if (User.Identity?.IsAuthenticated == true)

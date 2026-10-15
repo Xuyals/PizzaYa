@@ -1,0 +1,115 @@
+@model PizzaYa.Models.AdminMenuViewModel
+@{
+    ViewData["Title"] = "Administrar el menú";
+    var co = new System.Globalization.CultureInfo("es-CO");
+}
+
+<h1 class="h3 fw-bold mb-3">Administrar el menú</h1>
+
+@if (TempData["Exito"] is string exito)
+{
+    <div class="alert alert-success" role="alert" id="aviso-exito">@exito</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger" role="alert" id="aviso-error">@error</div>
+}
+
+@* ── Valor del domicilio ── *@
+<div class="card shadow-sm mb-4" id="seccion-domicilio">
+    <div class="card-header fw-bold">🛵 Valor del domicilio</div>
+    <div class="card-body">
+        <form asp-action="GuardarDomicilio" method="post" class="row g-2 align-items-end">
+            <div class="col-sm-4">
+                <label for="valor-domicilio" class="form-label">Valor actual</label>
+                <input id="valor-domicilio" name="valor" type="number" min="0" step="any" class="form-control"
+                       value="@Model.ValorDomicilio.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)" />
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-danger">Guardar</button>
+            </div>
+            <div class="col-12 form-text">Se suma al total de los pedidos a domicilio nuevos. Hoy: @Model.ValorDomicilio.ToString("C0", co).</div>
+        </form>
+    </div>
+</div>
+
+@* ── Pizzas ── *@
+<div class="card shadow-sm mb-4" id="seccion-pizzas">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span class="fw-bold">🍕 Pizzas</span>
+        <a class="btn btn-sm btn-danger" asp-action="Pizza">+ Nueva pizza</a>
+    </div>
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead><tr><th>Pizza</th><th>Ingredientes base</th><th class="text-end">Precio base</th><th>Estado</th><th></th></tr></thead>
+            <tbody>
+                @foreach (var p in Model.Pizzas)
+                {
+                    <tr data-pizza="@p.Nombre" class="@(p.Disponible ? "" : "text-muted")">
+                        <td class="fw-semibold">@p.Nombre</td>
+                        <td class="small">@string.Join(", ", p.IngredientesBase.Select(i => i.Nombre))</td>
+                        <td class="text-end">@p.PrecioBase.ToString("C0", co)</td>
+                        <td>@if (p.Disponible) { <span class="badge bg-success">En el menú</span> } else { <span class="badge bg-secondary">Oculta</span> }</td>
+                        <td class="text-end text-nowrap">
+                            <a class="btn btn-sm btn-outline-secondary" asp-action="Pizza" asp-route-id="@p.Id">Editar</a>
+                            <form asp-action="CambiarDisponibilidad" method="post" class="d-inline">
+                                <input type="hidden" name="id" value="@p.Id" />
+                                <input type="hidden" name="disponible" value="@((!p.Disponible).ToString().ToLower())" />
+                                <button type="submit" class="btn btn-sm @(p.Disponible ? "btn-outline-danger" : "btn-outline-success")">
+                                    @(p.Disponible ? "Ocultar" : "Mostrar")
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+                @if (Model.Pizzas.Count == 0)
+                {
+                    <tr><td colspan="5" class="text-muted">Todavía no hay pizzas registradas.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@{
+    // Bordes, extras y tamaños se editan igual: una fila por elemento y una fila final para registrar uno nuevo
+    async Task Tabla(string titulo, string idSeccion, string accion, string etiquetaValor, IEnumerable<(int Id, string Nombre, string Valor)> filas)
+    {
+        <div class="card shadow-sm mb-4" id="@idSeccion">
+            <div class="card-header fw-bold">@titulo</div>
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead><tr><th>Nombre</th><th>@etiquetaValor</th><th></th></tr></thead>
+                    <tbody>
+                        @foreach (var f in filas)
+                        {
+                            var formId = $"{idSeccion}-{f.Id}";
+                            <tr>
+                                <td>
+                                    <form id="@formId" asp-action="@accion" method="post"></form>
+                                    <input form="@formId" type="hidden" name="id" value="@f.Id" />
+                                    <input form="@formId" name="nombre" class="form-control form-control-sm" value="@f.Nombre" maxlength="80" />
+                                </td>
+                                <td><input form="@formId" name="valor" type="number" min="0" step="any" class="form-control form-control-sm" value="@f.Valor" /></td>
+                                <td class="text-end"><button form="@formId" type="submit" class="btn btn-sm btn-outline-secondary">Guardar</button></td>
+                            </tr>
+                        }
+                        <tr class="table-light">
+                            <td>
+                                <form id="@(idSeccion)-nuevo" asp-action="@accion" method="post"></form>
+                                <input form="@(idSeccion)-nuevo" name="nombre" class="form-control form-control-sm" placeholder="Nuevo..." maxlength="80" />
+                            </td>
+                            <td><input form="@(idSeccion)-nuevo" name="valor" type="number" min="0" step="any" class="form-control form-control-sm" placeholder="@etiquetaValor" /></td>
+                            <td class="text-end"><button form="@(idSeccion)-nuevo" type="submit" class="btn btn-sm btn-danger">Agregar</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+    string Num(decimal d) => d.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+}
+
+@{ await Tabla("🥖 Bordes", "seccion-bordes", "GuardarBorde", "Precio", Model.Bordes.Select(b => (b.Id, b.Nombre, Num(b.Precio)))); }
+@{ await Tabla("➕ Ingredientes extra", "seccion-extras", "GuardarExtra", "Precio extra", Model.Extras.Select(i => (i.Id, i.Nombre, Num(i.PrecioExtra)))); }
+@{ await Tabla("📏 Tamaños", "seccion-tamanos", "GuardarTamano", "Factor de precio (× precio base)", Model.Tamanos.Select(t => (t.Id, t.Nombre, Num(t.FactorPrecio)))); }

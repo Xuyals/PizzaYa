@@ -6,7 +6,7 @@ namespace PizzaYa.Repositories;
 /// Menú en memoria con los mismos datos de database/01_hu1_menu_pizzas.sql.
 /// Se usa en las pruebas y cuando no hay cadena de conexión a Supabase configurada.
 /// </summary>
-public class InMemoryMenuRepository : IMenuRepository
+public class InMemoryMenuRepository : IMenuRepository, IMenuAdminRepository
 {
     private readonly List<Pizza> _pizzas;
     private readonly List<Tamano> _tamanos;
@@ -66,9 +66,139 @@ public class InMemoryMenuRepository : IMenuRepository
         return new InMemoryMenuRepository(pizzas, tamanos, bordes, ing);
     }
 
-    public Task<List<Pizza>> ObtenerPizzasAsync() => Task.FromResult(_pizzas.ToList());
-    public Task<Pizza?> ObtenerPizzaAsync(int id) => Task.FromResult(_pizzas.FirstOrDefault(p => p.Id == id));
-    public Task<List<Tamano>> ObtenerTamanosAsync() => Task.FromResult(_tamanos.ToList());
-    public Task<List<Borde>> ObtenerBordesAsync() => Task.FromResult(_bordes.ToList());
-    public Task<List<Ingrediente>> ObtenerIngredientesAsync() => Task.FromResult(_ingredientes.ToList());
+    // El menú del cliente solo ve las pizzas disponibles (las ocultas por el administrador no salen)
+    public Task<List<Pizza>> ObtenerPizzasAsync() => Task.FromResult(Copia(() => _pizzas.Where(p => p.Disponible).ToList()));
+    public Task<Pizza?> ObtenerPizzaAsync(int id) => Task.FromResult(Copia(() => _pizzas.FirstOrDefault(p => p.Id == id && p.Disponible)));
+    public Task<List<Tamano>> ObtenerTamanosAsync() => Task.FromResult(Copia(() => _tamanos.ToList()));
+    public Task<List<Borde>> ObtenerBordesAsync() => Task.FromResult(Copia(() => _bordes.ToList()));
+    public Task<List<Ingrediente>> ObtenerIngredientesAsync() => Task.FromResult(Copia(() => _ingredientes.ToList()));
+
+    // ── HU7: administración del menú ────────────────────────────────────
+
+    public Task<List<Pizza>> ObtenerTodasLasPizzasAsync() => Task.FromResult(Copia(() => _pizzas.OrderBy(p => p.Nombre).ToList()));
+
+    public Task<Pizza?> ObtenerPizzaParaEditarAsync(int id) => Task.FromResult(Copia(() => _pizzas.FirstOrDefault(p => p.Id == id)));
+
+    public Task<Pizza?> CrearPizzaAsync(Pizza pizza, IEnumerable<int> ingredientesBaseIds)
+    {
+        lock (_candado)
+        {
+            if (_pizzas.Any(p => Igual(p.Nombre, pizza.Nombre))) return Task.FromResult<Pizza?>(null);
+            pizza.Id = _pizzas.Count == 0 ? 1 : _pizzas.Max(p => p.Id) + 1;
+            pizza.IngredientesBase = IngredientesPorId(ingredientesBaseIds);
+            _pizzas.Add(pizza);
+            return Task.FromResult<Pizza?>(pizza);
+        }
+    }
+
+    public Task<bool> ActualizarPizzaAsync(int id, string nombre, string? descripcion, decimal precioBase, IEnumerable<int> ingredientesBaseIds)
+    {
+        lock (_candado)
+        {
+            var pizza = _pizzas.FirstOrDefault(p => p.Id == id);
+            if (pizza is null || _pizzas.Any(p => p.Id != id && Igual(p.Nombre, nombre))) return Task.FromResult(false);
+            pizza.Nombre = nombre;
+            pizza.Descripcion = descripcion;
+            pizza.PrecioBase = precioBase;
+            pizza.IngredientesBase = IngredientesPorId(ingredientesBaseIds);
+            return Task.FromResult(true);
+        }
+    }
+
+    public Task<bool> CambiarDisponibilidadPizzaAsync(int id, bool disponible)
+    {
+        lock (_candado)
+        {
+            var pizza = _pizzas.FirstOrDefault(p => p.Id == id);
+            if (pizza is null) return Task.FromResult(false);
+            pizza.Disponible = disponible;
+            return Task.FromResult(true);
+        }
+    }
+
+    public Task<Borde?> CrearBordeAsync(string nombre, decimal precio)
+    {
+        lock (_candado)
+        {
+            if (_bordes.Any(b => Igual(b.Nombre, nombre))) return Task.FromResult<Borde?>(null);
+            var borde = new Borde { Id = _bordes.Count == 0 ? 1 : _bordes.Max(b => b.Id) + 1, Nombre = nombre, Precio = precio };
+            _bordes.Add(borde);
+            return Task.FromResult<Borde?>(borde);
+        }
+    }
+
+    public Task<bool> ActualizarBordeAsync(int id, string nombre, decimal precio)
+    {
+        lock (_candado)
+        {
+            var borde = _bordes.FirstOrDefault(b => b.Id == id);
+            if (borde is null || _bordes.Any(b => b.Id != id && Igual(b.Nombre, nombre))) return Task.FromResult(false);
+            borde.Nombre = nombre;
+            borde.Precio = precio;
+            return Task.FromResult(true);
+        }
+    }
+
+    public Task<Ingrediente?> CrearIngredienteAsync(string nombre, decimal precioExtra)
+    {
+        lock (_candado)
+        {
+            if (_ingredientes.Any(i => Igual(i.Nombre, nombre))) return Task.FromResult<Ingrediente?>(null);
+            var ingrediente = new Ingrediente
+            {
+                Id = _ingredientes.Count == 0 ? 1 : _ingredientes.Max(i => i.Id) + 1,
+                Nombre = nombre,
+                PrecioExtra = precioExtra,
+            };
+            _ingredientes.Add(ingrediente);
+            return Task.FromResult<Ingrediente?>(ingrediente);
+        }
+    }
+
+    public Task<bool> ActualizarIngredienteAsync(int id, string nombre, decimal precioExtra)
+    {
+        lock (_candado)
+        {
+            var ingrediente = _ingredientes.FirstOrDefault(i => i.Id == id);
+            if (ingrediente is null || _ingredientes.Any(i => i.Id != id && Igual(i.Nombre, nombre))) return Task.FromResult(false);
+            ingrediente.Nombre = nombre;
+            ingrediente.PrecioExtra = precioExtra;
+            return Task.FromResult(true);
+        }
+    }
+
+    public Task<Tamano?> CrearTamanoAsync(string nombre, decimal factorPrecio)
+    {
+        lock (_candado)
+        {
+            if (_tamanos.Any(t => Igual(t.Nombre, nombre))) return Task.FromResult<Tamano?>(null);
+            var tamano = new Tamano { Id = _tamanos.Count == 0 ? 1 : _tamanos.Max(t => t.Id) + 1, Nombre = nombre, FactorPrecio = factorPrecio };
+            _tamanos.Add(tamano);
+            return Task.FromResult<Tamano?>(tamano);
+        }
+    }
+
+    public Task<bool> ActualizarTamanoAsync(int id, string nombre, decimal factorPrecio)
+    {
+        lock (_candado)
+        {
+            var tamano = _tamanos.FirstOrDefault(t => t.Id == id);
+            if (tamano is null || _tamanos.Any(t => t.Id != id && Igual(t.Nombre, nombre))) return Task.FromResult(false);
+            tamano.Nombre = nombre;
+            tamano.FactorPrecio = factorPrecio;
+            return Task.FromResult(true);
+        }
+    }
+
+    private readonly object _candado = new();
+
+    private T Copia<T>(Func<T> lectura)
+    {
+        lock (_candado) return lectura();
+    }
+
+    private List<Ingrediente> IngredientesPorId(IEnumerable<int> ids) =>
+        _ingredientes.Where(i => ids.Contains(i.Id)).ToList();
+
+    private static bool Igual(string a, string b) => string.Equals(a.Trim(), b.Trim(), StringComparison.OrdinalIgnoreCase);
 }

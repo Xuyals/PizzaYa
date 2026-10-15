@@ -13,12 +13,15 @@ public class CarritoController : Controller
     private readonly PrecioService  _precio;
     private readonly PedidoService  _pedidos;
     private readonly CuponService   _cupones;
+    private readonly ConfiguracionService _configuracion;
 
-    public CarritoController(CarritoService carrito, PedidoService pedidos, CuponService cupones)
+    public CarritoController(CarritoService carrito, PedidoService pedidos, CuponService cupones,
+        ConfiguracionService configuracion)
     {
         _carrito = carrito;
         _pedidos = pedidos;
         _cupones = cupones;
+        _configuracion = configuracion;
     }
 
     // GET: /Carrito
@@ -74,6 +77,7 @@ public class CarritoController : Controller
         {
             Carrito = carrito,
             EsDomicilio = false,
+            ValorDomicilio = await _configuracion.ObtenerCostoDomicilioAsync(),
             // Con sesión iniciada se adelanta el nombre
             Nombre = User.Identity?.IsAuthenticated == true ? User.Identity.Name ?? "" : "",
             // Cupón que el cliente escogió en su perfil (HU6)
@@ -111,8 +115,9 @@ public class CarritoController : Controller
 
         vm.Carrito = carrito;
 
-        // Recalcular domicilio
-        vm.CostoDomicilio = vm.EsDomicilio ? PrecioService.CostoDomicilioFijo : 0m;
+        // Recalcular domicilio con el valor que configuró el administrador (HU7)
+        vm.ValorDomicilio = await _configuracion.ObtenerCostoDomicilioAsync();
+        vm.CostoDomicilio = vm.EsDomicilio ? vm.ValorDomicilio : 0m;
 
         // Aplicar cupón si viene. Un cupón que no existe o está vencido (HU6) no cambia el total:
         // se avisa con el error y el pedido no se confirma hasta corregirlo o dejar el campo vacío.

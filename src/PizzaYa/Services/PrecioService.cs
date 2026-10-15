@@ -9,7 +9,7 @@ namespace PizzaYa.Services;
 /// </summary>
 public class PrecioService
 {
-    /// <summary>Costo fijo de domicilio (en pesos colombianos).</summary>
+    /// <summary>Valor del domicilio por defecto (en pesos colombianos), mientras el administrador no lo cambie (HU7).</summary>
     public const decimal CostoDomicilioFijo = 5000m;
 
     private static readonly List<CuponDescuento> _cupones = new()
@@ -35,13 +35,16 @@ public class PrecioService
 
     /// <summary>
     /// Calcula el total final incluyendo domicilio y descuento por cupón.
+    /// <paramref name="valorDomicilio"/> es el valor configurado por el administrador (HU7);
+    /// si no se indica se usa <see cref="CostoDomicilioFijo"/>.
     /// </summary>
     public decimal CalcularTotal(
         decimal precioBase,
         bool esDomicilio,
-        decimal descuento = 0m)
+        decimal descuento = 0m,
+        decimal? valorDomicilio = null)
     {
-        var costo = esDomicilio ? CostoDomicilioFijo : 0m;
+        var costo = esDomicilio ? valorDomicilio ?? CostoDomicilioFijo : 0m;
         var total = precioBase + costo - descuento;
         return Math.Max(0m, total);
     }
@@ -57,12 +60,14 @@ public class PrecioService
         List<Ingrediente> quitados,
         bool esDomicilio,
         string? codigoCupon,
-        IReadOnlyList<CuponDescuento>? cupones = null)
+        IReadOnlyList<CuponDescuento>? cupones = null,
+        decimal? valorDomicilio = null)
     {
         var precioConTamano = pizza.PrecioBase * tamano.FactorPrecio;
         var precioExtras = extras.Sum(e => e.PrecioExtra);
         var precioBase = precioConTamano + borde.Precio + precioExtras;
-        var costoDomicilio = esDomicilio ? CostoDomicilioFijo : 0m;
+        var valorDelDomicilio = valorDomicilio ?? CostoDomicilioFijo;
+        var costoDomicilio = esDomicilio ? valorDelDomicilio : 0m;
 
         var (descuento, cuponAplicado, mensajeCupon) = ResolverCupon(codigoCupon, precioBase + costoDomicilio, cupones);
 
@@ -80,6 +85,7 @@ public class PrecioService
             PrecioBorde = borde.Precio,
             PrecioExtras = precioExtras,
             CostoDomicilio = costoDomicilio,
+            ValorDomicilio = valorDelDomicilio,
             Descuento = descuento,
             Total = total,
             EsDomicilio = esDomicilio,

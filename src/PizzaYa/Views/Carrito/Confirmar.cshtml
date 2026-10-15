@@ -57,7 +57,7 @@
                                        id="rb-domicilio" value="true"
                                        onchange="toggleDireccion(this.value)">
                                 <label class="form-check-label" for="rb-domicilio">
-                                    🛵 Domicilio <span class="badge bg-info text-dark">+ $5.000</span>
+                                    🛵 Domicilio <span class="badge bg-info text-dark">+ @Model.ValorDomicilio.ToString("C0", co)</span>
                                 </label>
                             </div>
                         </div>
