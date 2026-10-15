@@ -1,0 +1,29 @@
+name: Build y pruebas
+
+# Corre en cada Pull Request y en cada push a main
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+
+      - name: Instalar .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restaurar paquetes
+        run: dotnet restore PizzaYa.sln
+
+      - name: Compilar
+        run: dotnet build PizzaYa.sln --no-restore --configuration Release
+
+      # Las pruebas no usan Supabase: arrancan la app en memoria
+      - name: Pruebas
+        run: dotnet test PizzaYa.sln --no-build --configuration Release --verbosity normal
