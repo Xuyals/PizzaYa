@@ -10,17 +10,31 @@ public class MenuController : Controller
 {
     private readonly IMenuRepository _menu;
     private readonly PersonalizacionService _personalizacion;
+    private readonly ConsumoService? _consumo;
 
-    public MenuController(IMenuRepository menu, PersonalizacionService personalizacion)
+    // El inventario (HU9) es opcional: sin él, el menú no revisa ingredientes agotados
+    public MenuController(IMenuRepository menu, PersonalizacionService personalizacion, ConsumoService? consumo = null)
     {
         _menu = menu;
         _personalizacion = personalizacion;
+        _consumo = consumo;
     }
+
+    private async Task<HashSet<int>> ObtenerAgotadosAsync() =>
+        _consumo is null ? new HashSet<int>() : await _consumo.ObtenerAgotadosAsync();
 
     // GET: /Menu
     public async Task<IActionResult> Index()
     {
-        var modelo = new MenuViewModel { Pizzas = await _menu.ObtenerPizzasAsync() };
+        var pizzas = await _menu.ObtenerPizzasAsync();
+        var agotados = await ObtenerAgotadosAsync();
+
+        // HU9: la pizza con un ingrediente base agotado se muestra como no disponible
+        var modelo = new MenuViewModel
+        {
+            Pizzas = pizzas,
+            PizzasSinStock = pizzas.Where(p => ConsumoService.SinStock(p, agotados)).Select(p => p.Id).ToHashSet(),
+        };
         return View(modelo);
     }
 
@@ -29,6 +43,7 @@ public class MenuController : Controller
     {
         var pizza = await _menu.ObtenerPizzaAsync(id);
         if (pizza is null) return RedirectToAction(nameof(Index));
+        if (ConsumoService.SinStock(pizza, await ObtenerAgotadosAsync())) return PizzaSinStock(pizza);
 
         var bordes = await _menu.ObtenerBordesAsync();
         var anterior = LeerDeSesion();
@@ -46,6 +61,8 @@ public class MenuController : Controller
     {
         var pizza = await _menu.ObtenerPizzaAsync(id);
         if (pizza is null) return RedirectToAction(nameof(Index));
+        var agotados = await ObtenerAgotadosAsync();
+        if (ConsumoService.SinStock(pizza, agotados)) return PizzaSinStock(pizza);
         seleccion.PizzaId = id;
 
         var tamanos = await _menu.ObtenerTamanosAsync();
@@ -53,6 +70,11 @@ public class MenuController : Controller
         var ingredientes = await _menu.ObtenerIngredientesAsync();
 
         var errores = _personalizacion.Validar(seleccion, pizza, tamanos, bordes, ingredientes);
+
+        // HU9: un ingrediente agotado no se puede escoger como extra
+        foreach (var agotado in ingredientes.Where(i => seleccion.ExtrasIds.Contains(i.Id) && agotados.Contains(i.Id)))
+            errores.Add(("ExtrasIds", $"{agotado.Nombre} está agotado y no se puede agregar como extra."));
+
         if (errores.Count > 0)
         {
             foreach (var (campo, mensaje) in errores)
@@ -105,5 +127,12 @@ public class MenuController : Controller
         Bordes = bordes,
         Tamanos = tamanos ?? await _menu.ObtenerTamanosAsync(),
         Extras = ingredientes ?? await _menu.ObtenerIngredientesAsync(),
+        ExtrasAgotados = await ObtenerAgotadosAsync(),
     };
+
+    private IActionResult PizzaSinStock(Pizza pizza)
+    {
+        TempData["Error"] = $"La pizza {pizza.Nombre} no está disponible por ahora.";
+        return RedirectToAction(nameof(Index));
+    }
 }
