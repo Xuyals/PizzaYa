@@ -1,6 +1,18 @@
 # PizzaYa
 Tienda virtual de pizzas con pedidos a domicilio, hecha con ASP.NET Core y Supabase, y organizada con la metodología Kanban
 
+## Estado del proyecto
+Se trabaja con Kanban; el tablero, las políticas y los roles están en [docs/kanban.md](docs/kanban.md).
+
+| HU | Historia | Equipo | Rama | Estado |
+|----|----------|--------|------|--------|
+| 1 | Menú de pizzas y personalización | 1 | `feature/HU1-pizzas` | En `main`, completa |
+| 2 | Cálculo de precio | 2 | `feature/equipo2-hu2-hu3` | En PR de integración, pendiente de unir |
+| 3 | Carrito y confirmación del pedido | 2 | `feature/equipo2-hu2-hu3` | En PR de integración, pendiente de unir |
+| 4 | Pedidos y estados | 3 | `feature/HU4-pedidos_estados` | En `main`, incompleta (ver issue "HU4 incompleta") |
+| 5 | Inventario y proveedores | 4 | `feature/HU5-inventario_proveedores` | En PR de integración, pendiente de unir |
+| 6 | Perfil, favoritas y cupones | 5 | `feature/HU6-perfil` | Sin código todavía |
+
 ## Tecnologías
 - ASP.NET Core MVC (.NET 8) con C#
 - Supabase (Postgres) usando Npgsql + Dapper
