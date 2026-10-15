@@ -28,6 +28,9 @@ public class ResumenConPrecioViewModel
     public decimal Descuento { get; set; }
     public decimal Total { get; set; }
 
+    /// <summary>Valor del domicilio vigente (se cobre o no), para mostrarlo en la opción "Domicilio".</summary>
+    public decimal ValorDomicilio { get; set; }
+
     // ── Opciones de entrega ──
     public bool EsDomicilio { get; set; } = false;
 
@@ -76,6 +79,9 @@ public class ConfirmarPedidoViewModel
     public string? Direccion { get; set; }
 
     public decimal CostoDomicilio { get; set; }
+
+    /// <summary>Valor del domicilio vigente (HU7), para mostrarlo en la opción "Domicilio".</summary>
+    public decimal ValorDomicilio { get; set; }
 
     public decimal Subtotal => Carrito.Subtotal;
     public decimal Total => Subtotal + CostoDomicilio;
