@@ -123,7 +123,13 @@ public class PedidoConfirmadoViewModel
 /// <summary>
 /// Cupones de descuento válidos (HU2).
 /// </summary>
-public record CuponDescuento(string Codigo, decimal MontoDescuento, string Descripcion);
+public record CuponDescuento(
+    string Codigo, decimal MontoDescuento, string Descripcion,
+    DateTime? VenceEn = null, int? UsuarioId = null)
+{
+    /// <summary>Un cupón sin fecha de vencimiento no vence nunca.</summary>
+    public bool EstaVencido(DateTime ahora) => VenceEn is not null && VenceEn <= ahora;
+}
 
 // ─────────────────────────────────────────────────────────
 // HU4 – Seguimiento del pedido por el cliente

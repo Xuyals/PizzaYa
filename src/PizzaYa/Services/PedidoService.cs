@@ -21,7 +21,7 @@ public class PedidoService
     /// <summary>Datos que el cliente escribe al confirmar el carrito.</summary>
     public record DatosConfirmacion(
         string NumeroPedido, string Nombre, string Telefono, bool EsDomicilio, string? Direccion,
-        decimal CostoDomicilio, decimal Descuento);
+        decimal CostoDomicilio, decimal Descuento, int? UsuarioId = null);
 
     /// <summary>Guarda el carrito como pedido nuevo, en estado "Recibido".</summary>
     public async Task<Pedido> CrearDesdeCarritoAsync(Carrito carrito, DatosConfirmacion datos)
@@ -41,6 +41,7 @@ public class PedidoService
             Total = Math.Max(0m, carrito.Subtotal + datos.CostoDomicilio - datos.Descuento),
             Estado = EstadoPedido.Recibido,
             CreadoEn = DateTime.UtcNow,
+            UsuarioId = datos.UsuarioId,
         };
 
         foreach (var item in carrito.Items)
