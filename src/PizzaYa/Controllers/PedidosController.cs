@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PizzaYa.Models;
 using PizzaYa.Repositories;
@@ -19,6 +20,7 @@ public class PedidosController : Controller
 
     // GET: /Pedidos
     /// <summary>Panel de cocina: pedidos del más antiguo al más reciente.</summary>
+    [Authorize(Roles = RolUsuario.Personal)]
     public async Task<IActionResult> Index()
     {
         var pedidos = await _pedidos.ObtenerTodosAsync();
@@ -28,6 +30,7 @@ public class PedidosController : Controller
     // POST: /Pedidos/Cambiar
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = RolUsuario.Personal)]
     public async Task<IActionResult> Cambiar(int id, string nuevoEstado)
     {
         var resultado = await _servicio.CambiarEstadoAsync(id, nuevoEstado);

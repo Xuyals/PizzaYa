@@ -1,0 +1,46 @@
+@model PizzaYa.Models.RegistroViewModel
+@{
+    ViewData["Title"] = "Crear cuenta";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <h1 class="h3 fw-bold mb-3">Crear cuenta</h1>
+
+        <form asp-controller="Cuenta" asp-action="Registrar" method="post" class="card shadow-sm" novalidate>
+            <div class="card-body">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                <div class="mb-3">
+                    <label asp-for="Nombre" class="form-label fw-semibold">Nombre *</label>
+                    <input asp-for="Nombre" class="form-control" autocomplete="name" />
+                    <span asp-validation-for="Nombre" class="text-danger small"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Correo" class="form-label fw-semibold">Correo *</label>
+                    <input asp-for="Correo" type="email" class="form-control" autocomplete="email" />
+                    <span asp-validation-for="Correo" class="text-danger small"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Password" class="form-label fw-semibold">Contraseña *</label>
+                    <input asp-for="Password" class="form-control" autocomplete="new-password" />
+                    <div class="form-text">Mínimo 8 caracteres, con letras y números.</div>
+                    <span asp-validation-for="Password" class="text-danger small"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="ConfirmarPassword" class="form-label fw-semibold">Repite la contraseña *</label>
+                    <input asp-for="ConfirmarPassword" class="form-control" autocomplete="new-password" />
+                    <span asp-validation-for="ConfirmarPassword" class="text-danger small"></span>
+                </div>
+                <button type="submit" class="btn btn-danger w-100">Registrarme</button>
+            </div>
+            <div class="card-footer text-center small">
+                ¿Ya tienes cuenta? <a asp-action="Ingresar">Inicia sesión</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

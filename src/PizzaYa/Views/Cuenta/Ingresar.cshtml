@@ -1,0 +1,36 @@
+@model PizzaYa.Models.IngresarViewModel
+@{
+    ViewData["Title"] = "Iniciar sesión";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <h1 class="h3 fw-bold mb-3">Iniciar sesión</h1>
+
+        <form asp-controller="Cuenta" asp-action="Ingresar" method="post" class="card shadow-sm" novalidate>
+            <div class="card-body">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                <input type="hidden" asp-for="ReturnUrl" />
+
+                <div class="mb-3">
+                    <label asp-for="Correo" class="form-label fw-semibold">Correo</label>
+                    <input asp-for="Correo" class="form-control" autocomplete="username" />
+                    <span asp-validation-for="Correo" class="text-danger small"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Password" class="form-label fw-semibold">Contraseña</label>
+                    <input asp-for="Password" class="form-control" autocomplete="current-password" />
+                    <span asp-validation-for="Password" class="text-danger small"></span>
+                </div>
+                <button type="submit" class="btn btn-danger w-100">Entrar</button>
+            </div>
+            <div class="card-footer text-center small">
+                ¿No tienes cuenta? <a asp-action="Registrar">Regístrate</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PizzaYa.Models;
 using PizzaYa.Repositories;
@@ -6,6 +7,7 @@ using PizzaYa.Services;
 namespace PizzaYa.Controllers;
 
 /// <summary>HU5 (Equipo 4): menú de inventario y pedidos a proveedores.</summary>
+[Authorize(Roles = RolUsuario.Personal)]
 public class InventarioController : Controller
 {
     private readonly IInventarioRepository _inventario;
