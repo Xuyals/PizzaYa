@@ -2,22 +2,29 @@
 Tienda virtual de pizzas con pedidos a domicilio, hecha con ASP.NET Core y Supabase, y organizada con la metodología Kanban
 
 ## Estado del proyecto
-Se trabaja con Kanban; el tablero, las políticas y los roles están en [docs/kanban.md](docs/kanban.md).
+Se trabaja con Kanban; el tablero, las políticas y los roles están en [docs/kanban.md](docs/kanban.md). Cada historia tiene su clase de pruebas en `tests/PizzaYa.Tests`, con una prueba por criterio de aceptación (los criterios están en el Excel del proyecto).
 
-| HU | Historia | Equipo | Rama | Estado |
-|----|----------|--------|------|--------|
-| 1 | Menú de pizzas y personalización | 1 | `feature/HU1-pizzas` | En `main`, completa |
-| 2 | Cálculo de precio | 2 | `feature/equipo2-hu2-hu3` | En PR de integración, pendiente de unir |
-| 3 | Carrito y confirmación del pedido | 2 | `feature/equipo2-hu2-hu3` | En PR de integración, pendiente de unir |
-| 4 | Pedidos y estados | 3 | `feature/HU4-pedidos_estados` | En `main`, incompleta (ver issue "HU4 incompleta") |
-| 5 | Inventario y proveedores | 4 | `feature/HU5-inventario_proveedores` | En PR de integración, pendiente de unir |
-| 6 | Perfil, favoritas y cupones | 5 | `feature/HU6-perfil` | Sin código todavía |
+| HU | Historia | Equipo | Dónde se ve | Pruebas | Estado |
+|----|----------|--------|-------------|---------|--------|
+| 1 | Menú de pizzas y personalización | 1 | `/Menu` | `HU1PersonalizacionTests` | Completa |
+| 2 | Cálculo automático del precio | 2 | `/Precio/Resumen` | `HU2PrecioTests` | Completa |
+| 3 | Carrito y confirmación del pedido | 2 | `/Carrito` | `HU3CarritoTests`, `PedidoUnificadoTests` | Completa |
+| 4 | Panel de cocina y seguimiento de pedidos | 3 | `/Pedidos` (cocina) y `/Pedidos/Seguimiento` (cliente) | `HU4PedidosTests` | Completa |
+| 5 | Inventario y pedidos a proveedores | 4 | `/Inventario` | `HU5InventarioTests` | Completa |
+| 6 | Perfil: favoritas, último pedido y cupones | 5 | `/Perfil` | `HU6PerfilTests` | Completa |
+| 7* | Administrar el menú y el domicilio | sugerida | `/Admin` | `HU7AdminMenuTests` | Implementada, pendiente de aprobación del PO |
+| 8* | Registro e inicio de sesión | sugerida | `/Cuenta/Registrar`, `/Cuenta/Ingresar` | `HU8LoginTests` | Implementada, pendiente de aprobación del PO |
+| 9* | Descontar el inventario al confirmar un pedido | sugerida | `/Menu`, `/Carrito/Confirmar` | `HU9DescontarInventarioTests` | Implementada, pendiente de aprobación del PO |
+
+\* Historias sugeridas de la hoja "Historias sugeridas" del Excel: esperan la aprobación del Product Owner.
 
 ## Tecnologías
 - ASP.NET Core MVC (.NET 8) con C#
 - Supabase (Postgres) usando Npgsql + Dapper
+- Autenticación con cookies y contraseñas con hash (ASP.NET Core Identity `PasswordHasher`)
 - Bootstrap 5
-- xUnit para las pruebas
+- xUnit para las pruebas (incluye pruebas de integración con `WebApplicationFactory`)
+- GitHub Actions: `build` y `test` en cada Pull Request y en cada push a `main` (`.github/workflows/dotnet.yml`)
 
 ## Estructura
 ```
@@ -29,22 +36,60 @@ src/PizzaYa/
   Services/               Reglas de negocio
   Views/                  Vistas Razor
 tests/PizzaYa.Tests/      Pruebas de los criterios de aceptación
+docs/kanban.md            Metodología Kanban del proyecto
 ```
 
 ## Cómo correrlo
-1. Crear las tablas: en Supabase abrir **SQL Editor**, pegar y ejecutar en orden `database/01_hu1_menu_pizzas.sql`, `database/02_hu2_hu3_precios_pedidos.sql` y `database/05_hu5_inventario.sql`.
-2. Copiar la cadena de conexión: **Project Settings → Database → Connection string → .NET**
+1. **Crear las tablas.** En Supabase abrir **SQL Editor**, pegar y ejecutar los scripts de `database/` **en este orden** (todos se pueden repetir sin duplicar datos):
+
+   | Orden | Script | Qué crea |
+   |-------|--------|----------|
+   | 1 | `01_hu1_menu_pizzas.sql` | Pizzas, tamaños, bordes e ingredientes |
+   | 2 | `02_hu2_hu3_precios_pedidos.sql` | Cupones y pedidos (la única tabla de pedidos, con sus pizzas) |
+   | 3 | `04_hu4_pedidos_estados.sql` | Estados válidos de los pedidos |
+   | 4 | `05_hu5_inventario.sql` | Cantidades de inventario y pedidos a proveedores |
+   | 5 | `08_hu8_usuarios.sql` | Usuarios (registro e inicio de sesión) |
+   | 6 | `06_hu6_perfil.sql` | Favoritas, pedidos de cada cliente y cupones con vencimiento |
+   | 7 | `07_hu7_admin_menu.sql` | Configuración (valor del domicilio) |
+   | 8 | `09_hu9_descontar_inventario.sql` | Consumo de ingredientes por pizza |
+
+   El número del archivo es el de la historia, no el orden de ejecución: el 08 va antes que el 06 porque el perfil necesita la tabla de usuarios. El `03` no existe (la HU3 va dentro del `02`).
+2. **Copiar la cadena de conexión:** **Project Settings → Database → Connection string → .NET**
    (usar la del *Session pooler*) y guardarla como secreto local, **nunca en el repositorio**:
    ```bash
    cd src/PizzaYa
    dotnet user-secrets set "ConnectionStrings:Supabase" "Host=...;Port=5432;Database=postgres;Username=postgres.xxxx;Password=...;SSL Mode=Require"
    ```
-3. Correr la app:
+3. **Crear el primer administrador** (ver la sección siguiente).
+4. **Correr la app:**
    ```bash
    dotnet run --project src/PizzaYa
    ```
-   Si no hay cadena de conexión, la app arranca con un menú de ejemplo en memoria (sirve para maquetar sin base de datos).
-4. Pruebas: `dotnet test`
+   Sin cadena de conexión la app arranca en **modo local**: menú, inventario, pedidos, usuarios y cupones de ejemplo en memoria (sirve para probar sin base de datos; todo se pierde al reiniciar).
+5. **Pruebas:** `dotnet test`. No usan Supabase: arrancan la app en memoria, aunque tengas la cadena de conexión guardada.
+
+## Roles y cómo crear el primer usuario administrador
+Quien se registra en `/Cuenta/Registrar` queda como **Cliente**. Hay dos roles más:
+
+| Rol | Puede entrar a |
+|-----|----------------|
+| Cliente | Tienda, `/Pedidos/Seguimiento` y `/Perfil` |
+| Cocinero | Lo anterior, el panel de cocina (`/Pedidos`) y el inventario (`/Inventario`) |
+| Administrador | Todo lo anterior y `/Admin` (menú, precios y domicilio) |
+
+El **administrador inicial** se crea al arrancar la app a partir de la configuración (guardada como secreto, nunca en el repositorio). Si la cuenta ya existe no se toca:
+```bash
+cd src/PizzaYa
+dotnet user-secrets set "Admin:Correo" "admin@pizzaya.com"
+dotnet user-secrets set "Admin:Password" "UnaClaveSegura123"
+dotnet user-secrets set "Admin:Nombre" "Administrador"
+```
+La contraseña debe tener mínimo 8 caracteres, con letras y números. Funciona igual en modo local y con Supabase; en producción se pueden usar las variables de entorno `Admin__Correo` y `Admin__Password`.
+
+Para crear un **cocinero** (u otro administrador): que la persona se registre normalmente y, en el SQL Editor de Supabase:
+```sql
+update usuarios set rol = 'Cocinero' where lower(correo) = 'cocina@pizzaya.com';
+```
 
 ## HU1 – Menú de pizzas y personalización (Equipo 1)
 | # | Criterio | Dónde |
