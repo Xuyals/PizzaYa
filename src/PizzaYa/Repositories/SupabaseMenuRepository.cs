@@ -19,7 +19,8 @@ public class SupabaseMenuRepository : IMenuRepository
         await using var conn = await _db.OpenConnectionAsync();
         var pizzas = (await conn.QueryAsync<Pizza>(
             """
-            select id, nombre, descripcion, precio_base, imagen_url
+            select id, nombre, descripcion, precio_base, imagen_url,
+                   (nombre = 'Arma tu pizza') as es_pizza_personalizada
             from pizzas
             where disponible
             order by nombre
@@ -50,7 +51,8 @@ public class SupabaseMenuRepository : IMenuRepository
         await using var conn = await _db.OpenConnectionAsync();
         var pizza = await conn.QuerySingleOrDefaultAsync<Pizza>(
             """
-            select id, nombre, descripcion, precio_base, imagen_url
+            select id, nombre, descripcion, precio_base, imagen_url,
+                   (nombre = 'Arma tu pizza') as es_pizza_personalizada
             from pizzas
             where id = @id and disponible
             """, new { id });

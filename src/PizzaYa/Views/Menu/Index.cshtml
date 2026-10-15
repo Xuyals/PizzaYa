@@ -1,6 +1,7 @@
 @model MenuViewModel
 @{
     ViewData["Title"] = "Menú";
+    var pizzaLibre = Model.PizzaParaArmar;
 }
 
 <div class="mb-4">
@@ -23,44 +24,82 @@
 }
 else
 {
-    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4">
-        @foreach (var pizza in Model.Pizzas)
-        {
-            <div class="col">
-                <div class="card h-100 pizza-card">
-                    @if (string.IsNullOrEmpty(pizza.ImagenUrl))
-                    {
+    @if (pizzaLibre is not null)
+    {
+        <section class="mb-5" aria-labelledby="titulo-personalizable">
+            <h2 id="titulo-personalizable" class="h3 fw-bold mb-3">Arma tu pizza</h2>
+            <div class="row">
+                <div class="col-12 col-lg-4">
+                    <div class="card h-100 pizza-card border-danger">
                         <div class="card-img-top pizza-img d-flex align-items-center justify-content-center" aria-hidden="true">🍕</div>
-                    }
-                    else
-                    {
-                        <img src="@pizza.ImagenUrl" class="card-img-top pizza-img" alt="Pizza @pizza.Nombre" />
-                    }
-                    <div class="card-body d-flex flex-column">
-                        <h2 class="card-title h5">@pizza.Nombre</h2>
-                        @if (!string.IsNullOrEmpty(pizza.Descripcion))
-                        {
-                            <p class="card-text text-muted small">@pizza.Descripcion</p>
-                        }
-                        <p class="card-text small mb-3">
-                            <strong>Ingredientes:</strong>
-                            @string.Join(", ", pizza.IngredientesBase.Select(i => i.Nombre))
-                        </p>
-                        <div class="mt-auto d-flex justify-content-between align-items-center">
-                            <span class="fs-5 fw-bold">@Formato.Pesos(pizza.PrecioBase)</span>
-                            @if (Model.PizzasSinStock.Contains(pizza.Id))
-                            {
-                                <span class="badge text-bg-secondary me-2" data-sin-stock="@pizza.Id">No disponible</span>
-                                <button type="button" class="btn btn-secondary" disabled>Personalizar</button>
-                            }
-                            else
-                            {
-                                <a class="btn btn-danger" asp-action="Personalizar" asp-route-id="@pizza.Id">Personalizar</a>
-                            }
+                        <div class="card-body d-flex flex-column">
+                            <h3 class="card-title h5">@pizzaLibre.Nombre</h3>
+                            <p class="card-text text-muted small">@pizzaLibre.Descripcion</p>
+                            <p class="card-text small mb-3">
+                                <strong>Incluye:</strong> masa, pasta de tomate y una capa de queso.
+                            </p>
+                            <div class="mt-auto d-flex justify-content-between align-items-center">
+                                <span class="fs-5 fw-bold">@Formato.Pesos(pizzaLibre.PrecioBase)</span>
+                                @if (Model.PizzasSinStock.Contains(pizzaLibre.Id))
+                                {
+                                    <span class="badge text-bg-secondary">No disponible</span>
+                                }
+                                else
+                                {
+                                    <a class="btn btn-danger" asp-action="Personalizar" asp-route-id="@pizzaLibre.Id">Personalizar</a>
+                                }
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        }
-    </div>
+        </section>
+    }
+
+    @if (Model.Especialidades.Count > 0)
+    {
+        <section aria-labelledby="titulo-especialidades">
+            <h2 id="titulo-especialidades" class="h3 fw-bold mb-3">Nuestras especialidades</h2>
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4">
+                @foreach (var pizza in Model.Especialidades)
+                {
+                    <div class="col">
+                        <div class="card h-100 pizza-card">
+                            @if (string.IsNullOrEmpty(pizza.ImagenUrl))
+                            {
+                                <div class="card-img-top pizza-img d-flex align-items-center justify-content-center" aria-hidden="true">🍕</div>
+                            }
+                            else
+                            {
+                                <img src="@pizza.ImagenUrl" class="card-img-top pizza-img" alt="Pizza @pizza.Nombre" />
+                            }
+                            <div class="card-body d-flex flex-column">
+                                <h3 class="card-title h5">@pizza.Nombre</h3>
+                                @if (!string.IsNullOrEmpty(pizza.Descripcion))
+                                {
+                                    <p class="card-text text-muted small">@pizza.Descripcion</p>
+                                }
+                                <p class="card-text small mb-3">
+                                    <strong>Ingredientes:</strong>
+                                    @string.Join(", ", pizza.IngredientesBase.Select(i => i.Nombre))
+                                </p>
+                                <div class="mt-auto d-flex justify-content-between align-items-center">
+                                    <span class="fs-5 fw-bold">@Formato.Pesos(pizza.PrecioBase)</span>
+                                    @if (Model.PizzasSinStock.Contains(pizza.Id))
+                                    {
+                                        <span class="badge text-bg-secondary me-2" data-sin-stock="@pizza.Id">No disponible</span>
+                                        <button type="button" class="btn btn-secondary" disabled>Personalizar</button>
+                                    }
+                                    else
+                                    {
+                                        <a class="btn btn-danger" asp-action="Personalizar" asp-route-id="@pizza.Id">Personalizar</a>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </section>
+    }
 }

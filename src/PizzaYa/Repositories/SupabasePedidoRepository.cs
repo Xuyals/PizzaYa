@@ -21,9 +21,9 @@ public class SupabasePedidoRepository : IPedidoRepository
 
         pedido.Id = await conexion.ExecuteScalarAsync<int>(
             @"insert into pedidos (numero_pedido, nombre_cliente, telefono, es_domicilio, direccion,
-                                   subtotal, costo_domicilio, descuento, total, estado, creado_en, usuario_id)
+                                   subtotal, costo_domicilio, descuento, total, metodo_pago, estado, creado_en, usuario_id)
               values (@NumeroPedido, @NombreCliente, @Telefono, @EsDomicilio, @Direccion,
-                      @Subtotal, @CostoDomicilio, @Descuento, @Total, @Estado, @CreadoEn, @UsuarioId)
+                      @Subtotal, @CostoDomicilio, @Descuento, @Total, @MetodoPago, @Estado, @CreadoEn, @UsuarioId)
               returning id;", pedido, tx);
 
         foreach (var item in pedido.Items)

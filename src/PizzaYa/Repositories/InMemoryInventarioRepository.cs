@@ -28,6 +28,9 @@ public class InMemoryInventarioRepository : IInventarioRepository
             ("Maíz tierno", "kg", 6m, 3m), ("Pepperoni", "kg", 2m, 5m), ("Pimentón", "kg", 5m, 2m),
             ("Piña", "kg", 7m, 3m), ("Pollo", "kg", 3m, 8m), ("Queso mozzarella", "kg", 4m, 10m),
             ("Salsa de tomate", "L", 12m, 5m), ("Tocineta", "kg", 4m, 2m),
+            ("Queso extra", "kg", 8m, 3m), ("Carne", "kg", 8m, 3m), ("Chorizo", "kg", 8m, 3m),
+            ("Guacamole", "kg", 8m, 3m), ("Chicharrón", "kg", 8m, 3m), ("Carne de cerdo", "kg", 8m, 3m),
+            ("Masa", "kg", 30m, 5m), ("Pasta de tomate", "L", 30m, 5m), ("Queso base", "kg", 30m, 5m),
         };
 
         return new InMemoryInventarioRepository(datos.Select((d, i) => new IngredienteInventario

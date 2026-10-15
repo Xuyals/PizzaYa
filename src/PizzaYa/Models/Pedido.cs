@@ -15,6 +15,12 @@ public static class EstadoPedido
         new[] { Recibido, EnPreparacion, EnEntrega, Entregado };
 }
 
+public static class MetodoPagoPedido
+{
+    public const string AntesDeLaEntrega = "Antes de la entrega";
+    public const string AlRecoger = "Al recoger en tienda";
+}
+
 /// <summary>
 /// Pedido confirmado. Es la fila de la tabla <c>pedidos</c> de database/02_hu2_hu3_precios_pedidos.sql:
 /// lo crea el carrito (HU3) y lo consulta y avanza el módulo de pedidos (HU4).
@@ -31,6 +37,7 @@ public class Pedido
     public decimal CostoDomicilio { get; set; }
     public decimal Descuento { get; set; }
     public decimal Total { get; set; }
+    public string MetodoPago { get; set; } = MetodoPagoPedido.AntesDeLaEntrega;
     public string Estado { get; set; } = EstadoPedido.Recibido;
     public DateTime CreadoEn { get; set; } = DateTime.UtcNow;
 

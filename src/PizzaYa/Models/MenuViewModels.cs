@@ -4,6 +4,8 @@ public class MenuViewModel
 {
     public List<Pizza> Pizzas { get; set; } = new();
     public bool HayPizzas => Pizzas.Count > 0;
+    public Pizza? PizzaParaArmar => Pizzas.FirstOrDefault(p => p.EsPizzaPersonalizada);
+    public List<Pizza> Especialidades => Pizzas.Where(p => !p.EsPizzaPersonalizada).ToList();
 
     /// <summary>HU9: ids de las pizzas con algún ingrediente base agotado; se muestran como "No disponible".</summary>
     public HashSet<int> PizzasSinStock { get; set; } = new();

@@ -12,6 +12,9 @@ public class Pizza
     public bool Disponible { get; set; } = true;
 
     public List<Ingrediente> IngredientesBase { get; set; } = new();
+
+    /// <summary>Indica que esta entrada representa la pizza libre con ingredientes base fijos.</summary>
+    public bool EsPizzaPersonalizada { get; set; }
 }
 
 public class Ingrediente

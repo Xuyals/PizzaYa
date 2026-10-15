@@ -73,6 +73,7 @@ public class ConfirmarPedidoViewModel
     public string Telefono { get; set; } = "";
 
     public bool EsDomicilio { get; set; }
+    public string MetodoPago { get; set; } = MetodoPagoPedido.AntesDeLaEntrega;
 
     [RequiredIfDomicilio]
     [StringLength(200)]
@@ -123,6 +124,7 @@ public class PedidoConfirmadoViewModel
     public decimal CostoDomicilio { get; set; }
     public decimal Descuento { get; set; }
     public decimal Total { get; set; }
+    public string MetodoPago { get; set; } = MetodoPagoPedido.AntesDeLaEntrega;
     public DateTime FechaPedido { get; set; } = DateTime.Now;
 }
 

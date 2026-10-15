@@ -45,11 +45,17 @@ public class MenuController : Controller
         if (pizza is null) return RedirectToAction(nameof(Index));
         if (ConsumoService.SinStock(pizza, await ObtenerAgotadosAsync())) return PizzaSinStock(pizza);
 
-        var bordes = await _menu.ObtenerBordesAsync();
+        var bordes = await ObtenerBordesDisponiblesAsync(pizza);
         var anterior = LeerDeSesion();
         var seleccion = anterior?.PizzaId == id
             ? anterior
-            : new PizzaPersonalizada { PizzaId = id, BordeId = bordes.FirstOrDefault()?.Id };
+            : new PizzaPersonalizada
+            {
+                PizzaId = id,
+                BordeId = pizza.EsPizzaPersonalizada
+                    ? bordes.FirstOrDefault(b => b.Nombre == "Sin borde")?.Id
+                    : bordes.FirstOrDefault()?.Id,
+            };
 
         return View(await ArmarModeloAsync(pizza, seleccion, bordes));
     }
@@ -66,8 +72,10 @@ public class MenuController : Controller
         seleccion.PizzaId = id;
 
         var tamanos = await _menu.ObtenerTamanosAsync();
-        var bordes = await _menu.ObtenerBordesAsync();
-        var ingredientes = await _menu.ObtenerIngredientesAsync();
+        var bordes = await ObtenerBordesDisponiblesAsync(pizza);
+        var ingredientes = _personalizacion
+            .FiltrarOpciones(pizza, await _menu.ObtenerIngredientesAsync())
+            .ToList();
 
         var errores = _personalizacion.Validar(seleccion, pizza, tamanos, bordes, ingredientes);
 
@@ -126,9 +134,17 @@ public class MenuController : Controller
         Seleccion = seleccion,
         Bordes = bordes,
         Tamanos = tamanos ?? await _menu.ObtenerTamanosAsync(),
-        Extras = ingredientes ?? await _menu.ObtenerIngredientesAsync(),
+        Extras = ingredientes ?? _personalizacion.FiltrarOpciones(pizza, await _menu.ObtenerIngredientesAsync()).ToList(),
         ExtrasAgotados = await ObtenerAgotadosAsync(),
     };
+
+    private async Task<List<Borde>> ObtenerBordesDisponiblesAsync(Pizza pizza)
+    {
+        var bordes = await _menu.ObtenerBordesAsync();
+        return pizza.EsPizzaPersonalizada
+            ? bordes.Where(b => b.Nombre is "Sin borde" or "Relleno de queso" or "Relleno de bocadillo" or "Relleno de chocolate").ToList()
+            : bordes;
+    }
 
     private IActionResult PizzaSinStock(Pizza pizza)
     {
