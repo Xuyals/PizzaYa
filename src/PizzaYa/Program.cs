@@ -28,11 +28,13 @@ if (!string.IsNullOrWhiteSpace(cadenaSupabase))
     builder.Services.AddSingleton(NpgsqlDataSource.Create(cadenaSupabase));
     builder.Services.AddScoped<IMenuRepository, SupabaseMenuRepository>();
     builder.Services.AddScoped<IInventarioRepository, SupabaseInventarioRepository>(); // HU5 (Equipo 4)
+    builder.Services.AddScoped<IPedidoRepository, SupabasePedidoRepository>();
 }
 else
 {
     builder.Services.AddSingleton<IMenuRepository>(InMemoryMenuRepository.ConDatosDeEjemplo());
     builder.Services.AddSingleton<IInventarioRepository>(InMemoryInventarioRepository.ConDatosDeEjemplo()); // HU5 (Equipo 4)
+    builder.Services.AddSingleton<IPedidoRepository, InMemoryPedidoRepository>();
 }
 builder.Services.AddSingleton<PersonalizacionService>();
 builder.Services.AddSingleton<InventarioService>(); // HU5 (Equipo 4)
