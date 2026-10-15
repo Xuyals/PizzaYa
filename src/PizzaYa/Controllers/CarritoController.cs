@@ -10,7 +10,6 @@ namespace PizzaYa.Controllers;
 public class CarritoController : Controller
 {
     private readonly CarritoService _carrito;
-    private readonly PrecioService  _precio;
     private readonly PedidoService  _pedidos;
     private readonly CuponService   _cupones;
     private readonly ConfiguracionService _configuracion;

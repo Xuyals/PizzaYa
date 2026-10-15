@@ -67,6 +67,9 @@ La guía usa tallas S/M/L; este proyecto usa puntos y horas.
 - Cada historia se trabaja en su rama `feature/HUn-nombre` (o `feature/equipoN-...`).
 - Para integrar se abre un Pull Request contra `main`. Los PR los une el Kanban Coach.
 - Si la rama del equipo está atrasada, se integra `main` con **merge** (nunca rebase ni force push sobre ramas de los equipos) en una rama `integracion/...` y se abre el PR desde ahí.
+- Cuando una rama sale de otra que todavía no está en `main` (PR apilados), los PR se unen en orden, del más antiguo al más nuevo.
+- `develop` ya no se usa: todo se integra en `main`.
+- GitHub Actions (`.github/workflows/dotnet.yml`) compila y corre las pruebas en cada PR. No se une un PR con el pipeline en rojo.
 - Commits en español con prefijo (`feat:`, `fix:`, `docs:`, `chore:`, `merge:`) y mensaje descriptivo; no usar mensajes como "1.0".
 - Cada PR describe: qué se hizo, cómo probarlo y una sección "Pendiente del equipo" con lo que no cumple los criterios de aceptación.
 
@@ -77,6 +80,7 @@ La guía usa tallas S/M/L; este proyecto usa puntos y horas.
 | Product Owner | Por definir | Prioriza el Backlog y asigna la clase de servicio; aprueba qué pasa a Ready; acepta o rechaza en Review |
 | Kanban Coach / Flow Manager | Santiago | Facilita las reuniones; detecta y elimina bloqueos; vigila los límites WIP; calcula y muestra las métricas |
 | Equipos 1 a 5 (desarrollo) | Por definir | Toman tarjetas de Ready (pull), desarrollan, hacen pruebas unitarias y ayudan a liberar columnas llenas |
+| Desarrollador de cierre | Santiago | Encargado de terminar el programa: completó HU4 y HU6 e implementó las sugeridas 7, 8 y 9 |
 | QA / Tester | Por definir | Prueba cada tarjeta contra sus criterios en Testing (puede ser rol rotativo) |
 | DevOps / Despliegue | Por definir | Pasa las tarjetas aprobadas a producción |
 
@@ -97,13 +101,26 @@ Se calculan en el Excel desde la hoja Seguimiento: tarjetas terminadas, lead tim
 
 ## Historias de usuario
 
-| HU | Historia | Equipo | Puntos | Prioridad | Clase |
-|----|----------|--------|--------|-----------|-------|
-| 1 | Armar mi pizza (pizza, tamaño, borde, ingredientes) | 1 | 8 | Alta | Estándar |
-| 2 | Cálculo automático del precio | 2 | 8 | Crítica | Expedite |
-| 3 | Carrito y confirmación del pedido | 2 | 5 | Alta | Estándar |
-| 4 | Ver y cambiar estado de pedidos | 3 | 8 | Alta | Estándar |
-| 5 | Inventario y pedidos a proveedores | 4 | 8 | Media | Estándar |
-| 6 | Perfil: favoritas, último pedido y cupones | 5 | 5 | Baja | Intangible |
+| HU | Historia | Equipo | Puntos | Prioridad | Clase | PR | Columna del tablero |
+|----|----------|--------|--------|-----------|-------|----|---------------------|
+| 1 | Armar mi pizza (pizza, tamaño, borde, ingredientes) | 1 | 8 | Alta | Estándar | #2 | Review |
+| 2 | Cálculo automático del precio | 2 | 8 | Crítica | Expedite | #6 | Review |
+| 3 | Carrito y confirmación del pedido | 2 | 5 | Alta | Estándar | #6, #10 | Review |
+| 4 | Ver y cambiar estado de pedidos | 3 (completó Santiago) | 8 | Alta | Estándar | #3, #4, #11 | Testing |
+| 5 | Inventario y pedidos a proveedores | 4 | 8 | Media | Estándar | #7 | Review |
+| 6 | Perfil: favoritas, último pedido y cupones | 5 (hizo Santiago) | 5 | Baja | Intangible | #13 | Testing |
+| 7* | Administrar el menú y el valor del domicilio | Santiago | Por estimar | Por definir | Estándar | #14 | Testing |
+| 8* | Registro e inicio de sesión | Santiago | Por estimar | Por definir | Estándar | #12 | Testing |
+| 9* | Descontar el inventario al confirmar un pedido | Santiago | Por estimar | Por definir | Estándar | #15 | Testing |
 
-Las historias sugeridas 7 (administrar el menú), 8 (registro e inicio de sesión) y 9 (descontar inventario al confirmar) están en Backlog pendientes de aprobación del PO. Los criterios de aceptación están en el Excel y no se copian aquí para no duplicarlos.
+\* Historias sugeridas. Se implementaron sin pasar por Ready: el PO debe aprobarlas, estimarlas y priorizarlas en el próximo Replenishment. Si no las aprueba, se devuelven a Backlog.
+
+Los criterios de aceptación están en el Excel y no se copian aquí para no duplicarlos.
+
+## Estado del tablero (15/10/2026)
+
+- **Review:** HU1, HU2, HU3 y HU5 ya están en `main`. Falta que el PO las apruebe en la Delivery Review para pasarlas a Done.
+- **Testing:** HU4, HU6, HU7, HU8 y HU9 tienen sus PR abiertos (#11 a #15) con pruebas por criterio y el pipeline en verde. Pasan a Review cuando se unan a `main`.
+- **Límites WIP superados:** Review (límite 1) tiene 4 tarjetas y Testing (límite 2) tiene 5. Pasó porque el programa se terminó de integrar en una sola jornada. Se revisa en la Operations Review: o se suben los límites o se reparte el Review entre varios días.
+- **Orden para unir los PR:** #10 → #11 → #12 → #13 → #14 → #15 → #16. Al unir el #11 se cierra el issue #9 ("HU4 incompleta").
+- **Pendiente de decisión:** la HU2 sigue marcada como Expedite (ver hoja Observaciones del Excel); borrar `develop` y las ramas ya unidas (`fix/*`, `integracion/*`, `feature/HU2-calculo_precios`, `feature/HU3-carrito`) cuando los equipos estén de acuerdo.
